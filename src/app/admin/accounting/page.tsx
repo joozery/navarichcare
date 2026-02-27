@@ -1,46 +1,77 @@
 "use client";
-import React from "react";
-import { Info, Receipt, Calendar } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Info, Receipt, Calendar, Loader2 } from "lucide-react";
 
 export default function AccountingPage() {
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch("/api/admin/accounting")
+            .then(res => res.json())
+            .then(json => {
+                if (json.success) setData(json);
+                setLoading(false);
+            });
+    }, []);
+
+    if (loading) return (
+        <div className="h-[60vh] flex flex-col items-center justify-center gap-4 opacity-40">
+            <Loader2 className="animate-spin text-blue-600" size={48} />
+            <p className="font-black uppercase tracking-[0.3em] text-xs">Loading Accounting Data...</p>
+        </div>
+    );
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-8 animate-in fade-in duration-700">
             <div>
-                <h2 className="text-2xl font-black text-gray-800">บัญชี & Amortization</h2>
-                <p className="text-gray-500 text-sm mt-1">ตัดจำหน่ายรายได้ค่าประกันเฉลี่ย 36 งวด เพื่อวิเคราะห์กำไรสุทธิรายเดือน</p>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">บัญชี & Amortization</h2>
+                <p className="text-slate-500 text-sm mt-1 font-black uppercase tracking-widest opacity-40">Monthly Revenue Recognition Analysis</p>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-xl border border-gray-200 space-y-5">
-                    <div className="flex items-center gap-2 text-blue-600"><Info size={18} /><h3 className="font-bold text-gray-800">หลักการรับรู้รายได้ (Revenue Amortization)</h3></div>
-                    <p className="text-sm text-gray-600 leading-relaxed">ค่าประกัน 10% ที่เก็บจากลูกค้าจะถูก <span className="text-blue-600 font-bold">แบ่งออกเป็น 36 ส่วนเท่ากัน</span> กำไรสุทธิที่แสดงใน Dashboard จะเป็นกำไรที่ <span className="text-emerald-600 font-bold">หักลบหนี้เสียและค่าซ่อมจริง</span> แล้วเท่านั้น</p>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-gray-50 p-4 rounded-xl"><p className="text-xs text-gray-500 mb-1">รายได้รอรับรู้</p><p className="text-xl font-black text-gray-800">฿4,250,800</p></div>
-                        <div className="bg-blue-600 p-4 rounded-xl text-white"><p className="text-xs text-blue-200 mb-1">รับรู้แล้วเดือนนี้</p><p className="text-xl font-black">฿148,500</p></div>
+            <div className="grid lg:grid-cols-2 gap-8">
+                <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-6">
+                    <div className="flex items-center gap-2 text-blue-600">
+                        <Info size={18} />
+                        <h3 className="font-black text-slate-900 uppercase italic">Revenue Recognition Model</h3>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg font-mono text-xs space-y-1.5 text-gray-700">
-                        <p>+ ดอกเบี้ยรับจริง</p><p>+ รายได้ประกัน (ตัดงวดแล้ว)</p>
-                        <p className="text-red-500">− หนี้เสีย (NPL)</p><p className="text-red-500">− ค่าซ่อม / ค่าอะไหล่</p>
-                        <div className="border-t border-gray-300 pt-1.5 font-black text-emerald-600">= กำไรสุทธิจริง</div>
+                    <p className="text-sm text-slate-500 leading-relaxed font-bold">
+                        ค่าประกัน 10% (฿{(data.totalUnrecognized + (data.recognizedThisMonth * 36)).toLocaleString()})
+                        จะถูก <span className="text-blue-600 font-black italic">แบ่งออกเป็น 36 งวด</span>
+                        เพื่อรับรู้รายได้รายเดือนอย่างสม่ำเสมอตามระยะเวลาครองงาน
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">รายได้รอรับรู้</p>
+                            <p className="text-2xl font-black text-slate-900">฿{data.totalUnrecognized.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-slate-900 p-6 rounded-2xl text-white shadow-xl shadow-slate-200">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">รับรู้แล้วเดือนนี้</p>
+                            <p className="text-2xl font-black text-blue-400">฿{data.recognizedThisMonth.toLocaleString()}</p>
+                        </div>
                     </div>
                 </div>
 
-                <div className="bg-[#0F172A] text-white p-6 rounded-xl">
-                    <h3 className="font-bold mb-5 flex items-center gap-2"><Calendar size={18} className="text-cyan-400" />การตัดงวดเดือนนี้</h3>
-                    <div className="space-y-3">
-                        {[{ device: "iPhone 15 Pro Max", id: "NC-1001", perMonth: 125, month: 8 }, { device: "iPad Pro M4", id: "NC-1004", perMonth: 150, month: 3 }, { device: "iPhone 14 Plus", id: "NC-1002", perMonth: 88.88, month: 14 }].map((item, i) => (
-                            <div key={i} className="bg-white/5 border border-white/10 p-4 rounded-lg flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-cyan-400"><Receipt size={16} /></div>
-                                    <div><p className="text-sm font-bold">{item.device}</p><p className="text-[10px] text-gray-400">งวดที่ {item.month}/36 • {item.id}</p></div>
+                <div className="bg-slate-900 text-white p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16"></div>
+                    <h3 className="font-black mb-6 flex items-center gap-2 uppercase italic tracking-wider">
+                        <Calendar size={18} className="text-blue-400" /> การตัดงวดรายได้เดือนนี้
+                    </h3>
+                    <div className="space-y-4 relative z-10">
+                        {data.recentAmortizations.map((item: any, i: number) => (
+                            <div key={i} className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between hover:bg-white/10 transition-all">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                        <Receipt size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-black uppercase italic">{item.device}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">งวดที่ {item.month}/36 • {item.id}</p>
+                                    </div>
                                 </div>
-                                <p className="text-sm font-black text-cyan-400">+฿{item.perMonth.toFixed(2)}</p>
+                                <p className="text-sm font-black text-blue-400">+฿{item.perMonth.toLocaleString()}</p>
                             </div>
                         ))}
-                    </div>
-                    <div className="mt-5 bg-white/5 border border-white/10 p-4 rounded-lg flex justify-between items-center">
-                        <p className="text-xs text-gray-400">รวมตัดงวดเดือนนี้</p>
-                        <p className="text-xl font-black text-cyan-300">฿148,500</p>
                     </div>
                 </div>
             </div>

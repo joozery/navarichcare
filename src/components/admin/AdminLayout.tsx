@@ -3,12 +3,21 @@
 import React, { useState } from "react";
 import { AdminSidebar } from "./AdminSidebar";
 import { Bell, Search, ChevronDown } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 const SIDEBAR_OPEN = 288;
 const SIDEBAR_CLOSED = 72;
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
     const [collapsed, setCollapsed] = useState(false);
+    const pathname = usePathname();
+
+    // Check if current route is login page
+    const isLoginPage = pathname === "/admin/login";
+
+    if (isLoginPage) {
+        return <div className="min-h-screen bg-[#F8FAFC]">{children}</div>;
+    }
 
     return (
         <div className="min-h-screen bg-[#F1F5F9] flex">
@@ -40,3 +49,4 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </div>
     );
 }
+

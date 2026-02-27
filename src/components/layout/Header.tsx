@@ -8,9 +8,6 @@ export function Header() {
             {/* Top bar (gray text) */}
             <div className="hidden border-b md:flex h-8 items-center px-4 md:px-8 text-[11px] text-gray-500 justify-between">
                 <div className="flex gap-6">
-                    <Link href="#" className="hover:text-purple-600 transition-colors">บริษัทของเรา</Link>
-                    <Link href="#" className="hover:text-purple-600 transition-colors">ลูกค้าองค์กร</Link>
-                    <Link href="#" className="hover:text-purple-600 transition-colors">ค้นหาทรูช้อป</Link>
                 </div>
                 <div>
                     <Link href="#" className="flex items-center gap-1.5 hover:text-purple-600 transition-colors">
@@ -25,23 +22,22 @@ export function Header() {
                 {/* Logo */}
                 <Link href="/" className="shrink-0 mr-10 hover:opacity-90 transition-opacity">
                     <Image
-                        src="/logo/logonavarich.png"
+                        src="/canvas.png"
                         alt="NaravichCare Logo"
                         width={180}
-                        height={48}
-                        className="h-12 w-auto object-contain"
+                        height={60}
+                        className="h-14 w-auto object-contain"
                         priority
                     />
                 </Link>
 
                 {/* Desktop Nav */}
                 <nav className="hidden lg:flex items-center gap-8 font-medium text-[15px] text-gray-700 w-full justify-start">
-                    <Link href="#" className="hover:text-purple-600 transition-colors py-2">แพ็กเกจโปรโมชัน</Link>
-                    <Link href="#" className="hover:text-purple-600 transition-colors py-2">เน็ตบ้าน</Link>
-                    <Link href="#" className="hover:text-purple-600 transition-colors py-2">ออนไลน์สโตร์</Link>
+                    <Link href="/portal" className="text-blue-600 font-bold hover:text-blue-700 transition-colors py-2 border-b-2 border-blue-500">ตรวจสอบสัญญา</Link>
+                    <Link href="/agent" className="hover:text-purple-600 transition-colors py-2 bg-slate-50 px-3 rounded-lg">สำหรับตัวแทน</Link>
+                    <Link href="#" className="hover:text-purple-600 transition-colors py-2">แพ็กเกจ</Link>
                     <Link href="#" className="hover:text-purple-600 transition-colors py-2">บริการลูกค้า</Link>
                     <Link href="#" className="hover:text-purple-600 transition-colors py-2">สิทธิพิเศษ</Link>
-                    <Link href="#" className="hover:text-purple-600 transition-colors py-2">เครือข่ายและเทคโนโลยี</Link>
                 </nav>
 
                 {/* Actions */}

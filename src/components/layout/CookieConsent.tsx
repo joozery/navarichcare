@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 
 export function CookieConsent() {
     const [visible, setVisible] = useState(true);
+    const pathname = usePathname();
 
-    if (!visible) return null;
+    // Do not show on admin pages
+    if (pathname.startsWith("/admin") || !visible) return null;
 
     return (
         <div className="fixed bottom-10 left-0 right-0 z-[100] px-4 pointer-events-none">

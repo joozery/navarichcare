@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
     LayoutDashboard, Smartphone, ShieldCheck, Users, Building2,
     ClipboardList, FileText, LogOut, TrendingDown, Percent,
@@ -21,6 +21,7 @@ const navGroups: NavGroup[] = [
     {
         group: "การดำเนินงาน",
         items: [
+            { title: "จัดการแพ็กเกจ", icon: <Zap size={18} />, href: "/admin/packages" },
             { title: "จัดการสินเชื่อ", icon: <Smartphone size={18} />, href: "/admin/loans", badge: 4 },
             { title: "ระบบประกัน", icon: <ShieldCheck size={18} />, href: "/admin/insurance" },
             { title: "งานเคลม", icon: <ClipboardList size={18} />, href: "/admin/claims", badge: "ใหม่" },
@@ -30,6 +31,7 @@ const navGroups: NavGroup[] = [
     {
         group: "บุคลากร",
         items: [
+            { title: "จัดการแอดมิน", icon: <UserCog size={18} />, href: "/admin/users" },
             { title: "สาขา & พนักงาน", icon: <Building2 size={18} />, href: "/admin/branches" },
             { title: "ตัวแทน (Agents)", icon: <Users size={18} />, href: "/admin/agents" },
         ],
@@ -58,6 +60,20 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        if (!confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) return;
+        try {
+            const res = await fetch("/api/auth/logout", { method: "POST" });
+            if (res.ok) {
+                router.push("/admin/login");
+                router.refresh();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
     return (
         <aside
             className="h-screen bg-white flex flex-col fixed left-0 top-0 z-50 border-r border-gray-200 transition-all duration-300 ease-in-out"
@@ -152,8 +168,11 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
                         {!collapsed && <><span className="flex-1">{a.label}</span>{"badge" in a && a.badge && <span className="text-[10px] font-bold bg-red-100 text-red-500 px-2 py-0.5 rounded-full">{a.badge}</span>}</>}
                     </Link>
                 ))}
-                <button title={collapsed ? "ออกจากระบบ" : undefined}
-                    className={`w-full flex items-center rounded-lg text-[13.5px] font-medium text-red-400 hover:text-red-600 hover:bg-red-50 transition-all ${collapsed ? "justify-center py-3" : "gap-3 px-3 py-2.5"}`}>
+                <button
+                    title={collapsed ? "ออกจากระบบ" : undefined}
+                    onClick={handleLogout}
+                    className={`w-full flex items-center rounded-lg text-[13.5px] font-medium text-red-400 hover:text-red-600 hover:bg-red-50 transition-all ${collapsed ? "justify-center py-3" : "gap-3 px-3 py-2.5"}`}
+                >
                     <LogOut size={18} className="shrink-0" />
                     {!collapsed && <span>ออกจากระบบ</span>}
                 </button>
