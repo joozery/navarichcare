@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { CheckCircle2, Download, ChevronLeft, Printer, ShieldCheck, Info } from "lucide-react";
 
 export default function RegisterPage() {
     const [step, setStep] = useState(1);
@@ -18,6 +19,10 @@ export default function RegisterPage() {
     const [address, setAddress] = useState("");
 
     const [loading, setLoading] = useState(false);
+    const [registrationResult, setRegistrationResult] = useState<any>(null);
+    const [showCertificate, setShowCertificate] = useState(false);
+
+    const certificateRef = useRef<HTMLDivElement>(null);
 
     const nextStep = () => setStep(step + 1);
     const prevStep = () => setStep(step - 1);
@@ -42,11 +47,12 @@ export default function RegisterPage() {
                 }),
             });
 
+            const result = await response.json();
             if (response.ok) {
+                setRegistrationResult(result.data);
                 setStep(4);
             } else {
-                const error = await response.json();
-                alert("เกิดข้อผิดพลาด: " + error.message);
+                alert("เกิดข้อผิดพลาด: " + result.message);
             }
         } catch (error) {
             console.error("Submit Error:", error);
@@ -55,6 +61,161 @@ export default function RegisterPage() {
             setLoading(false);
         }
     };
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    if (showCertificate && registrationResult) {
+        return (
+            <div className="min-h-screen bg-slate-100 flex flex-col items-center py-10 print:bg-white print:py-0">
+                <div className="mb-6 flex gap-4 print:hidden">
+                    <button
+                        onClick={() => setShowCertificate(false)}
+                        className="px-6 py-2 bg-white border border-slate-200 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-all"
+                    >
+                        <ChevronLeft size={18} /> ย้อนกลับ
+                    </button>
+                    <button
+                        onClick={handlePrint}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg"
+                    >
+                        <Printer size={18} /> พิมพ์ใบรับรอง / พิมพ์เป็น PDF
+                    </button>
+                </div>
+
+                {/* Printable Certificate UI (Kept from premium version for functionality) */}
+                <div
+                    ref={certificateRef}
+                    className="w-[800px] bg-white shadow-2xl overflow-hidden relative print:shadow-none print:w-full print:border-0 border-[16px] border-[#d4ae6e]/20"
+                    style={{ aspectRatio: '1 / 1.414' }}
+                >
+                    <div className="absolute inset-4 border border-[#d4ae6e] pointer-events-none"></div>
+                    <div className="p-12 space-y-8 relative">
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                                <h1 className="text-4xl font-black text-[#0c4a6e] tracking-tight uppercase italic flex items-center gap-2">
+                                    CERTIFICATE <span className="text-[#d4ae6e]">นรวิชญ์ แคร์</span>
+                                </h1>
+                                <p className="text-[#d4ae6e] text-xs font-black tracking-[0.3em] uppercase">
+                                    CERTIFICATE OF MOBILE INSURANCE
+                                </p>
+                            </div>
+                            <img src="/logo/logonavarich.png" alt="Logo" className="h-12 object-contain" />
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-[#0c4a6e] text-white px-4 py-1 inline-block text-[11px] font-black uppercase tracking-widest rounded-r-full">
+                                ข้อมูลผู้รับความคุ้มครอง (CUSTOMER INFORMATION)
+                            </div>
+                            <div className="grid grid-cols-2 gap-y-4 text-sm font-bold text-slate-700 mt-4 px-2">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">ชื่อ-นามสกุล / FULL NAME</p>
+                                    <p className="text-base text-[#0c4a6e] border-b border-slate-100 pb-1">{registrationResult.fullName}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">เบอร์โทรศัพท์ / PHONE NUMBER</p>
+                                    <p className="text-base text-[#0c4a6e] border-b border-slate-100 pb-1">{registrationResult.phone}</p>
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">เลขที่บัตรประชาชน / ID CARD NUMBER</p>
+                                    <p className="text-base text-[#0c4a6e] border-b border-slate-100 pb-1">XXX-XXXX-{registrationResult.idCard.slice(-4)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-[#0c4a6e] text-white px-4 py-1 inline-block text-[11px] font-black uppercase tracking-widest rounded-r-full">
+                                รายละเอียดอุปกรณ์ (DEVICE DETAILS)
+                            </div>
+                            <div className="grid grid-cols-3 gap-6 text-sm font-bold text-slate-700 mt-4 px-2">
+                                <div className="space-y-1">
+                                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">ยี่ห้อ/รุ่น / BRAND MODEL</p>
+                                    <p className="text-base text-[#0c4a6e] uppercase">{registrationResult.brand} {registrationResult.model}</p>
+                                </div>
+                                <div className="space-y-1 col-span-2">
+                                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">เลข IMEI / IMEI NUMBER</p>
+                                    <p className="text-base text-[#0c4a6e] tracking-widest">{registrationResult.imei}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-[#0c4a6e] text-white px-4 py-1 inline-block text-[11px] font-black uppercase tracking-widest rounded-r-full">
+                                สรุปความคุ้มครอง (COVERAGE SUMMARY)
+                            </div>
+                            <table className="w-full text-left mt-4 border-collapse overflow-hidden rounded-xl border border-slate-100">
+                                <thead>
+                                    <tr className="bg-[#fcf8f1] border-b border-[#ebd7b1]">
+                                        <th className="px-6 py-3 text-[10px] font-black text-[#d4ae6e] uppercase tracking-widest">รายการคุ้มครอง</th>
+                                        <th className="px-6 py-3 text-[10px] font-black text-[#d4ae6e] uppercase tracking-widest text-center">จำกัดสิทธิ์</th>
+                                        <th className="px-6 py-3 text-[10px] font-black text-[#d4ae6e] uppercase tracking-widest text-center">ทุนประกันภัย</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-sm font-bold text-slate-700">
+                                    <tr className="border-b border-slate-50">
+                                        <td className="px-6 py-4 flex items-center gap-2">หน้าจอแตก (Broken Screen)</td>
+                                        <td className="px-6 py-4 text-center">1 ครั้ง</td>
+                                        <td className="px-6 py-4 text-center font-black text-[#0c4a6e]">Full Coverage</td>
+                                    </tr>
+                                    <tr className="border-b border-slate-50">
+                                        <td className="px-6 py-4 flex items-center gap-2">ความเสียหายจากของเหลว (Liquid)</td>
+                                        <td className="px-6 py-4 text-center">1 ครั้ง</td>
+                                        <td className="px-6 py-4 text-center font-black text-[#0c4a6e]">฿5,000.00</td>
+                                    </tr>
+                                    <tr className="">
+                                        <td className="px-6 py-4 flex items-center gap-2">การโจรกรรม (Theft)</td>
+                                        <td className="px-6 py-4 text-center">1 ครั้ง</td>
+                                        <td className="px-6 py-4 text-center font-black text-[#0c4a6e]">฿10,000.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-8 pt-6">
+                            <div className="space-y-3">
+                                <h4 className="text-[10px] font-black text-[#0c4a6e] uppercase tracking-widest flex items-center gap-2">
+                                    <Info size={12} className="text-[#d4ae6e]" /> ข้อยกเว้นสำคัญ (EXCLUSIONS)
+                                </h4>
+                                <ul className="text-[9px] text-slate-500 font-bold space-y-1.5 list-disc pl-4 italic">
+                                    <li>การเจตนาทำให้ทรัพย์สินเสียหาย (Intentional Damage)</li>
+                                    <li>การซ่อมแซมจากร้านภายนอกที่ไม่ได้รับอนุญาต</li>
+                                    <li>การลบชื่อผู้ใช้หรือรหัสผ่านเครื่อง (ID/Pass lock)</li>
+                                    <li>ความเสียหายที่เกิดขึ้นก่อนการสมัครบริการ</li>
+                                </ul>
+                            </div>
+                            <div className="text-right flex flex-col items-end justify-center">
+                                <div className="w-24 h-24 rounded-full border border-slate-100 flex items-center justify-center relative bg-[#fcf8f1]/30">
+                                    <p className="text-[8px] font-black text-[#d4ae6e] uppercase tracking-widest text-center px-2">
+                                        Certified Naravich Care
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-12 grid grid-cols-2 gap-20">
+                            <div className="text-center space-y-2 border-t border-slate-200 pt-3">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4">ลงชื่อผู้รับความคุ้มครอง</p>
+                                <p className="text-xs font-bold text-slate-700">({registrationResult.fullName})</p>
+                            </div>
+                            <div className="text-center space-y-2 border-t border-slate-200 pt-3 flex flex-col items-center">
+                                <div className="h-6 italic font-serif text-blue-900 font-bold -mb-4">Naravich S.</div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4">ลงชื่อผู้ให้ความคุ้มครอง</p>
+                                <p className="text-xs font-bold text-slate-700">(Naravich Care Co., Ltd.)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <style jsx global>{`
+                    @media print {
+                        body { margin: 0; padding: 0; }
+                        nav, footer, button { display: none !important; }
+                    }
+                `}</style>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-white flex flex-col items-center">
@@ -72,7 +233,7 @@ export default function RegisterPage() {
             </div>
 
             <main className="w-full max-w-[600px] px-6 py-12 flex flex-col items-center">
-                {/* Title */}
+                {/* Original UI Title Section */}
                 <div className="text-center mb-12">
                     <h1 className="text-[40px] font-black tracking-tight flex flex-col items-center">
                         <span className="bg-gradient-to-r from-pink-500 to-red-500 bg-clip-text text-transparent uppercase text-center">
@@ -92,16 +253,15 @@ export default function RegisterPage() {
                                 <span className="text-green-500 text-4xl font-black">✓</span>
                             </div>
                             <p className="text-3xl font-black text-gray-900">สมัครบริการสำเร็จ!</p>
-                            <p className="text-gray-500 font-bold">เราได้รับข้อมูลของคุณเรียบร้อยแล้ว</p>
+                            <p className="text-gray-500 font-bold">ข้อมูลของท่านถูกนำเข้าสู่ระบบความคุ้มครองเรียบร้อยแล้ว</p>
                         </div>
                     )}
                 </div>
 
-                {/* Form Steps */}
+                {/* Form Steps - Restoration of original styles */}
                 <div className="w-full space-y-8">
                     {step === 1 && (
                         <>
-                            {/* Step 1 Fields... */}
                             <div className="space-y-3">
                                 <label className="text-xl font-bold text-gray-800 block">
                                     ระบุหมายเลขโทรศัพท์ของคุณ
@@ -146,28 +306,23 @@ export default function RegisterPage() {
 
                     {step === 2 && (
                         <>
-                            {/* Step 2 Fields... */}
                             <div className="space-y-3">
-                                <label className="text-2xl font-bold text-gray-800 block">
-                                    ยี่ห้อ :
-                                </label>
+                                <label className="text-2xl font-bold text-gray-800 block">ยี่ห้อ :</label>
                                 <select
                                     className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 focus:border-pink-500 focus:outline-none transition-colors text-lg bg-white appearance-none"
                                     value={brand}
                                     onChange={(e) => setBrand(e.target.value)}
                                 >
                                     <option value="">เลือกยี่ห้อ</option>
-                                    <option value="apple">Apple</option>
-                                    <option value="samsung">Samsung</option>
-                                    <option value="oppo">Oppo</option>
-                                    <option value="vivo">Vivo</option>
+                                    <option value="Apple">Apple</option>
+                                    <option value="Samsung">Samsung</option>
+                                    <option value="Oppo">Oppo</option>
+                                    <option value="Vivo">Vivo</option>
                                 </select>
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-2xl font-bold text-gray-800 block">
-                                    รุ่น :
-                                </label>
+                                <label className="text-2xl font-bold text-gray-800 block">รุ่น :</label>
                                 <select
                                     className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 focus:border-pink-500 focus:outline-none transition-colors text-lg bg-white appearance-none"
                                     value={model}
@@ -175,16 +330,16 @@ export default function RegisterPage() {
                                     onChange={(e) => setModel(e.target.value)}
                                 >
                                     <option value="">{brand ? "เลือกรุ่น" : "กรุณาเลือกยี่ห้อก่อน"}</option>
-                                    {brand === "apple" && (
+                                    {brand === "Apple" && (
                                         <>
-                                            <option value="iphone16">iPhone 16 Pro Max</option>
-                                            <option value="iphone15">iPhone 15</option>
+                                            <option value="iPhone 16 Pro Max">iPhone 16 Pro Max</option>
+                                            <option value="iPhone 15">iPhone 15</option>
                                         </>
                                     )}
-                                    {brand === "samsung" && (
+                                    {brand === "Samsung" && (
                                         <>
-                                            <option value="s24">Samsung S24 Ultra</option>
-                                            <option value="s23">Samsung S23</option>
+                                            <option value="S24 Ultra">Samsung S24 Ultra</option>
+                                            <option value="S23">Samsung S23</option>
                                         </>
                                     )}
                                 </select>
@@ -210,7 +365,6 @@ export default function RegisterPage() {
 
                     {step === 3 && (
                         <>
-                            {/* Step 3 Fields... */}
                             <div className="space-y-6 text-left">
                                 <div className="space-y-2">
                                     <label className="text-xl font-bold text-gray-800 block">ชื่อ-นามสกุล :</label>
@@ -222,7 +376,6 @@ export default function RegisterPage() {
                                         onChange={(e) => setFullName(e.target.value)}
                                     />
                                 </div>
-
                                 <div className="space-y-2">
                                     <label className="text-xl font-bold text-gray-800 block">อีเมล :</label>
                                     <input
@@ -233,7 +386,6 @@ export default function RegisterPage() {
                                         onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </div>
-
                                 <div className="space-y-2">
                                     <label className="text-xl font-bold text-gray-800 block">เลขบัตรประชาชน :</label>
                                     <input
@@ -244,7 +396,6 @@ export default function RegisterPage() {
                                         onChange={(e) => setIdCard(e.target.value)}
                                     />
                                 </div>
-
                                 <div className="space-y-2">
                                     <label className="text-xl font-bold text-gray-800 block">ที่อยู่ :</label>
                                     <textarea
@@ -267,7 +418,7 @@ export default function RegisterPage() {
                                 <button
                                     onClick={handleSubmit}
                                     className="w-full bg-gradient-to-r from-pink-500 to-red-600 hover:scale-[1.02] text-white font-bold py-4 rounded-[1.5rem] text-2xl transition-all shadow-lg disabled:opacity-50"
-                                    disabled={!fullName || !email || !address || loading}
+                                    disabled={!fullName || !idCard || loading}
                                 >
                                     {loading ? "กำลังบันทึก..." : "สมัครบริการ"}
                                 </button>
@@ -276,16 +427,30 @@ export default function RegisterPage() {
                     )}
 
                     {step === 4 && (
-                        <div className="pt-8 text-center space-y-6">
-                            <p className="text-lg text-gray-600 font-medium">
-                                เจ้าหน้าที่จะติดต่อกลับเพื่อยืนยันข้อมูลภายใน 24 ชม.
-                            </p>
-                            <Link
-                                href="/"
-                                className="inline-block bg-gray-900 text-white font-bold px-12 py-4 rounded-2xl hover:bg-black transition-colors"
-                            >
-                                กลับสู่หน้าหลัก
-                            </Link>
+                        <div className="pt-8 text-center space-y-8 animate-in slide-in-from-bottom-5 duration-700">
+                            <div className="bg-slate-50 p-6 rounded-3xl border-2 border-dashed border-slate-200">
+                                <p className="text-lg text-gray-600 font-medium leading-relaxed">
+                                    ยินดีด้วย! ท่านได้ทำการสมัครบริการสำเร็จแล้ว<br />
+                                    <span className="text-pink-600 font-black">ใบรับรองความคุ้มครองดิจิทัลของท่านพร้อมใช้งานแล้ว</span>
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col gap-4">
+                                <button
+                                    onClick={() => setShowCertificate(true)}
+                                    className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] text-xl font-black uppercase hover:bg-pink-600 hover:scale-[1.02] transition-all shadow-xl flex items-center justify-center gap-3"
+                                >
+                                    <Download size={24} />
+                                    ดู / ดาวน์โหลดใบรับรอง
+                                </button>
+
+                                <Link
+                                    href="/"
+                                    className="w-full py-4 border-2 border-gray-100 text-gray-400 font-bold rounded-[1.5rem] text-lg hover:bg-gray-50 transition-all text-center"
+                                >
+                                    กลับสู่หน้าหลัก
+                                </Link>
+                            </div>
                         </div>
                     )}
                 </div>
