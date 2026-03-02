@@ -6,6 +6,7 @@ export async function POST(req: Request) {
     try {
         await connectToDatabase();
         const body = await req.json();
+        console.log("Registration API received body:", JSON.stringify(body).substring(0, 500) + "...");
 
         const registration = await Registration.create(body);
 

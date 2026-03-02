@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th">
-      <body className={`${notoSansThai.variable} antialiased font-sans`}>
+    <html lang="th" suppressHydrationWarning>
+      <body className={`${notoSansThai.variable} antialiased font-sans`} suppressHydrationWarning>
         {children}
         <CookieConsent />
       </body>

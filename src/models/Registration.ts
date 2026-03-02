@@ -1,6 +1,6 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
 
-const RegistrationSchema = new Schema(
+const RegistrationSchema = new mongoose.Schema(
     {
         phone: {
             type: String,
@@ -8,7 +8,7 @@ const RegistrationSchema = new Schema(
         },
         imei: {
             type: String,
-            required: [true, "Please provide an IMEI number"],
+            required: [true, "Please provide an IMEI"],
         },
         brand: {
             type: String,
@@ -18,26 +18,49 @@ const RegistrationSchema = new Schema(
             type: String,
             required: [true, "Please provide a device model"],
         },
-        fullName: {
-            type: String,
-            required: [true, "Please provide your full name"],
+        devicePrice: {
+            type: Number,
+            required: false,
         },
-        email: {
+        packageType: {
             type: String,
-            required: [true, "Please provide your email"],
+            required: false,
         },
-        idCard: {
-            type: String,
-            required: [true, "Please provide your ID Card number"],
+        images: {
+            type: Object,
+            required: false,
         },
-        address: {
-            type: String,
-            required: [true, "Please provide your address"],
-        },
+        // Detailed Personal Info
+        firstName: { type: String, required: false },
+        lastName: { type: String, required: false },
+        idCard: { type: String, required: false },
+        email: { type: String, required: false },
+        // Detailed Address Info
+        postCode: { type: String, required: false },
+        province: { type: String, required: false },
+        district: { type: String, required: false },
+        subDistrict: { type: String, required: false },
+        addressDetails: { type: String, required: false },
         status: {
             type: String,
-            enum: ["pending", "confirmed", "rejected"],
+            enum: ["pending", "paid", "approved", "rejected"],
             default: "pending",
+        },
+        paymentReceipt: {
+            type: String,
+            required: false,
+        },
+        policyNumber: {
+            type: String,
+            required: false,
+        },
+        approvedAt: {
+            type: Date,
+            required: false,
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now,
         },
     },
     {
@@ -45,6 +68,5 @@ const RegistrationSchema = new Schema(
     }
 );
 
-const Registration = models.Registration || model("Registration", RegistrationSchema);
-
-export default Registration;
+export default mongoose.models.Registration ||
+    mongoose.model("Registration", RegistrationSchema);

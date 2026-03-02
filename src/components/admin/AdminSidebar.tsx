@@ -21,9 +21,8 @@ const navGroups: NavGroup[] = [
     {
         group: "การดำเนินงาน",
         items: [
+            { title: "รายการลงทะเบียน", icon: <ClipboardList size={18} />, href: "/admin/registrations" },
             { title: "จัดการแพ็กเกจ", icon: <Zap size={18} />, href: "/admin/packages" },
-            { title: "จัดการสินเชื่อ", icon: <Smartphone size={18} />, href: "/admin/loans", badge: 4 },
-            { title: "ระบบประกัน", icon: <ShieldCheck size={18} />, href: "/admin/insurance" },
             { title: "งานเคลม", icon: <ClipboardList size={18} />, href: "/admin/claims", badge: "ใหม่" },
             { title: "เอกสารสัญญา", icon: <FileText size={18} />, href: "/admin/contracts" },
         ],
@@ -40,13 +39,11 @@ const navGroups: NavGroup[] = [
         group: "รายงาน & บัญชี",
         items: [
             { title: "กำไรจริง (Amortization)", icon: <Percent size={18} />, href: "/admin/accounting" },
-            { title: "หนี้เสีย (NPL)", icon: <TrendingDown size={18} />, href: "/admin/npl" },
         ],
     },
     {
         group: "User Portals",
         items: [
-            { title: "Branch Staff", icon: <UserCog size={18} />, href: "/admin/branch-staff" },
             { title: "Agent Portal", icon: <Users size={18} />, href: "/admin/agent-portal" },
             { title: "Customer Portal", icon: <UserCircle size={18} />, href: "/admin/customer-portal" },
         ],
