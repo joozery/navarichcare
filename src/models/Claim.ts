@@ -1,34 +1,74 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface IClaimPart {
+    name: string;
+    partNumber: string;
+    qty: number;
+    unitCost: number;
+}
+
 export interface IClaim extends Document {
-    insuranceId: mongoose.Types.ObjectId;
-    policyId: string;
+    // Customer Info (from Registration)
+    registrationId: mongoose.Types.ObjectId;
+    customerName: string;
+    idCard: string;
     imei: string;
-    claimType: "screen" | "water" | "battery";
+    deviceModel: string;
+    policyNumber: string;
+    // Step 2: Void Check
+    voidChecklist: { label: string; checked: boolean }[];
+    preRepairNote: string;
+    preRepairImages: string[];
+    // Step 3: Deductible
+    deductibleItem: string;
+    deductibleDetail: string;
     deductibleAmount: number;
-    description: string;
-    status: "pending" | "processing" | "completed" | "rejected";
-    technicianId?: string;
-    sparePartUsed?: string;
-    photoEvidence: string[]; // URLs to photos
+    paymentSlip: string;
+    // Step 4: Parts
+    parts: IClaimPart[];
+    // Step 5: Post-repair
+    postRepairNote: string;
+    postRepairImages: string[];
+    // Status
+    status: "completed" | "pending" | "rejected";
+    createdBy: string; // admin username
     createdAt: Date;
     updatedAt: Date;
 }
 
 const ClaimSchema: Schema = new Schema(
     {
-        insuranceId: { type: Schema.Types.ObjectId, ref: "Insurance", required: true },
-        policyId: { type: String, required: true },
+        registrationId: { type: Schema.Types.ObjectId, ref: "Registration", required: false },
+        customerName: { type: String },
+        idCard: { type: String },
         imei: { type: String, required: true },
-        claimType: { type: String, enum: ["screen", "water", "battery"], required: true },
-        deductibleAmount: { type: Number, required: true },
-        description: { type: String },
-        status: { type: String, enum: ["pending", "processing", "completed", "rejected"], default: "pending" },
-        technicianId: { type: String },
-        sparePartUsed: { type: String },
-        photoEvidence: [{ type: String }],
+        brand: { type: String },
+        deviceModel: { type: String },
+        policyNumber: { type: String },
+        voidChecklist: [{ label: String, checked: Boolean }],
+        preRepairNote: { type: String },
+        preRepairImages: [{ type: String }],
+        deductibleItem: { type: String },
+        deductibleDetail: { type: String },
+        deductibleAmount: { type: Number, default: 0 },
+        paymentSlip: { type: String },
+        parts: [{
+            name: String,
+            partNumber: String,
+            qty: { type: Number, default: 1 },
+            unitCost: { type: Number, default: 0 }
+        }],
+        postRepairNote: { type: String },
+        postRepairImages: [{ type: String }],
+        status: { type: String, enum: ["completed", "pending", "rejected"], default: "completed" },
+        createdBy: { type: String, default: "admin" },
     },
     { timestamps: true }
 );
 
-export default mongoose.models.Claim || mongoose.model<IClaim>("Claim", ClaimSchema);
+// Force clear cache to ensure updated schema is used
+if (mongoose.models.Claim) {
+    delete (mongoose.models as any).Claim;
+}
+
+export default mongoose.model<IClaim>("Claim", ClaimSchema);

@@ -1,0 +1,45 @@
+import mongoose, { Schema, model, models } from "mongoose";
+
+const CoveragePlanSchema = new Schema(
+    {
+        name: {
+            type: String,
+            required: [true, "Please provide a plan name"], // e.g., Naravich Care Plus
+        },
+        subTitle: {
+            type: String,
+            required: false, // e.g., (จอแตก+ตัวเครื่อง)
+        },
+        durationText: {
+            type: String,
+            required: true, // e.g., (1 ปี)
+        },
+        durationUnit: {
+            type: String,
+            required: true, // e.g., บาท / ปี
+        },
+        priceMultiplier: {
+            type: Number,
+            required: true, // e.g., 0.6 (multiplier for calculating price from device price)
+        },
+        highlights: {
+            type: [String],
+            default: [],
+        },
+        order: {
+            type: Number,
+            default: 0,
+        },
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+    },
+    {
+        timestamps: true,
+    }
+);
+
+const CoveragePlan = models.CoveragePlan || model("CoveragePlan", CoveragePlanSchema);
+
+export default CoveragePlan;

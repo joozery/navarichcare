@@ -11,6 +11,7 @@ interface IPackage {
     yearlyPrice: number;
     isActive: boolean;
     order: number;
+    highlights: string[];
 }
 
 export default function PackagesAdmin() {
@@ -25,7 +26,8 @@ export default function PackagesAdmin() {
         monthlyPrice: 0,
         yearlyPrice: 0,
         isActive: true,
-        order: 0
+        order: 0,
+        highlights: []
     });
 
     useEffect(() => {
@@ -55,7 +57,7 @@ export default function PackagesAdmin() {
             if (res.ok) {
                 fetchPackages();
                 setShowAddForm(false);
-                setNewForm({ name: "", range: "", monthlyPrice: 0, yearlyPrice: 0, isActive: true, order: 0 });
+                setNewForm({ name: "", range: "", monthlyPrice: 0, yearlyPrice: 0, isActive: true, order: 0, highlights: [] });
             }
         } catch (error) {
             console.error(error);
@@ -178,6 +180,45 @@ export default function PackagesAdmin() {
                                     onChange={e => showAddForm ? setNewForm({ ...newForm, order: Number(e.target.value) }) : setEditForm({ ...editForm!, order: Number(e.target.value) })}
                                 />
                             </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-gray-500 ml-1 uppercase">ไฮไลท์สิทธิประโยชน์</label>
+                                <div className="space-y-2">
+                                    {(showAddForm ? newForm.highlights : editForm?.highlights || []).map((h, i) => (
+                                        <div key={i} className="flex gap-2">
+                                            <input
+                                                className="flex-1 border border-gray-100 rounded-lg px-3 py-2 text-xs font-medium"
+                                                value={h}
+                                                onChange={e => {
+                                                    const updated = [...(showAddForm ? newForm.highlights : editForm!.highlights)];
+                                                    updated[i] = e.target.value;
+                                                    showAddForm ? setNewForm({ ...newForm, highlights: updated }) : setEditForm({ ...editForm!, highlights: updated });
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const updated = (showAddForm ? newForm.highlights : editForm!.highlights).filter((_, idx) => idx !== i);
+                                                    showAddForm ? setNewForm({ ...newForm, highlights: updated }) : setEditForm({ ...editForm!, highlights: updated });
+                                                }}
+                                                className="text-red-400 hover:text-red-600"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const updated = [...(showAddForm ? newForm.highlights : editForm?.highlights || []), ""];
+                                            showAddForm ? setNewForm({ ...newForm, highlights: updated }) : setEditForm({ ...editForm!, highlights: updated });
+                                        }}
+                                        className="text-[10px] font-bold text-blue-600 hover:underline"
+                                    >
+                                        + เพิ่มไฮไลท์
+                                    </button>
+                                </div>
+                            </div>
                             <button
                                 type="submit"
                                 className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-black text-base hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 mt-2"
@@ -247,6 +288,19 @@ export default function PackagesAdmin() {
                                     <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 rounded-xl font-black text-[12px] shadow-md shadow-blue-100 whitespace-nowrap">
                                         สมัครบริการ
                                     </div>
+                                </div>
+
+                                {/* Highlights Preview */}
+                                <div className="pt-4 border-t border-gray-50">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">สิทธิประโยชน์</p>
+                                    <ul className="space-y-1.5">
+                                        {(pkg.highlights || []).map((h, idx) => (
+                                            <li key={idx} className="flex gap-2 text-[11px] font-semibold text-gray-500 leading-tight">
+                                                <span className="text-blue-500 text-[14px]">•</span>
+                                                {h}
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
                             </div>
 

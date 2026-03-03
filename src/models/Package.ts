@@ -26,6 +26,10 @@ const PackageSchema = new Schema(
             type: Number,
             default: 0,
         },
+        highlights: {
+            type: [String],
+            default: [],
+        },
     },
     {
         timestamps: true,

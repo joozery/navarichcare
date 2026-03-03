@@ -36,7 +36,12 @@ export default function AdminManagement() {
         try {
             const res = await fetch("/api/admin-users");
             const data = await res.json();
-            setUsers(data);
+            if (Array.isArray(data)) {
+                setUsers(data);
+            } else {
+                console.error("API Error or Invalid format:", data);
+                setUsers([]);
+            }
         } catch (error) {
             console.error(error);
         } finally {

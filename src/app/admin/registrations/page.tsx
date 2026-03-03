@@ -49,6 +49,7 @@ export default function AdminRegistrations() {
     const [receiptFile, setReceiptFile] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [showCertificate, setShowCertificate] = useState(false);
+    const [showTransaction, setShowTransaction] = useState(false);
     const certRef = useRef<HTMLDivElement>(null);
 
     const fetchAll = async () => {
@@ -264,275 +265,359 @@ export default function AdminRegistrations() {
     }
 
     return (
-        <div className="bg-gray-50 min-h-screen py-8 px-6 lg:px-10">
-            <div className="max-w-[1400px] mx-auto space-y-7">
+        <>
+            <div className="bg-gray-50 min-h-screen py-8 px-6 lg:px-10">
+                <div className="max-w-[1400px] mx-auto space-y-7">
 
-                {/* Page Header */}
-                <div className="flex items-start justify-between">
-                    <div>
-                        <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">รายการลงทะเบียน</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">ตรวจสอบ อนุมัติ และออกกรมธรรม์ทั้งหมด</p>
+                    {/* Page Header */}
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">รายการลงทะเบียน</h1>
+                            <p className="text-sm text-gray-400 mt-0.5">ตรวจสอบ อนุมัติ และออกกรมธรรม์ทั้งหมด</p>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-2xl font-bold text-gray-900">{registrations.length}</div>
+                            <div className="text-xs text-gray-400 font-medium">รายการทั้งหมด</div>
+                        </div>
                     </div>
-                    <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900">{registrations.length}</div>
-                        <div className="text-xs text-gray-400 font-medium">รายการทั้งหมด</div>
+
+                    {/* Stat Tabs */}
+                    <div className="flex gap-2 flex-wrap">
+                        {(["all", "pending", "paid", "approved", "rejected"] as const).map(s => {
+                            const cfg = s === "all" ? null : STATUS_CONFIG[s];
+                            const active = filterStatus === s;
+                            return (
+                                <button
+                                    key={s}
+                                    onClick={() => setFilterStatus(s)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold border transition-all ${active
+                                        ? "bg-gray-900 text-white border-gray-900 shadow-sm"
+                                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-700"}`}
+                                >
+                                    {cfg && <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />}
+                                    {s === "all" ? "ทั้งหมด" : cfg!.label}
+                                    <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${active ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}>
+                                        {counts[s]}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
-                </div>
 
-                {/* Stat Tabs */}
-                <div className="flex gap-2 flex-wrap">
-                    {(["all", "pending", "paid", "approved", "rejected"] as const).map(s => {
-                        const cfg = s === "all" ? null : STATUS_CONFIG[s];
-                        const active = filterStatus === s;
-                        return (
-                            <button
-                                key={s}
-                                onClick={() => setFilterStatus(s)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold border transition-all ${active
-                                    ? "bg-gray-900 text-white border-gray-900 shadow-sm"
-                                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-700"}`}
-                            >
-                                {cfg && <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />}
-                                {s === "all" ? "ทั้งหมด" : cfg!.label}
-                                <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${active ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}>
-                                    {counts[s]}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Toolbar */}
-                <div className="flex gap-3 items-center flex-wrap">
-                    <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                            type="text"
-                            placeholder="ค้นหาชื่อ, เบอร์, IMEI, เลขที่ใบสมัคร..."
-                            className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-300"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                        />
+                    {/* Toolbar */}
+                    <div className="flex gap-3 items-center flex-wrap">
+                        <div className="relative flex-1 max-w-sm">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <input
+                                type="text"
+                                placeholder="ค้นหาชื่อ, เบอร์, IMEI, เลขที่ใบสมัคร..."
+                                className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-300"
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                {/* Table */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-8">#</th>
-                                <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">ผู้สมัคร</th>
-                                <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">อุปกรณ์</th>
-                                <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">แพ็กเกจ</th>
-                                <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">วันที่สมัคร</th>
-                                <th className="text-center px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">สถานะ</th>
-                                <th className="text-center px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loading ? (
-                                <tr><td colSpan={7} className="py-20 text-center text-sm text-gray-400">กำลังโหลดข้อมูล...</td></tr>
-                            ) : filtered.length === 0 ? (
-                                <tr><td colSpan={7} className="py-20 text-center text-sm text-gray-400">ไม่พบรายการข้อมูล</td></tr>
-                            ) : filtered.map((r, idx) => {
-                                const cfg = STATUS_CONFIG[r.status];
-                                return (
-                                    <tr key={r._id} className="hover:bg-gray-50/70 transition-colors">
-                                        <td className="px-6 py-4 text-xs text-gray-300 font-medium">{idx + 1}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
-                                                    {r.firstName?.[0]}{r.lastName?.[0]}
+                    {/* Table */}
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-200">
+                                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-8">#</th>
+                                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">ผู้สมัคร</th>
+                                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">อุปกรณ์</th>
+                                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">แพ็กเกจ</th>
+                                    <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">วันที่สมัคร</th>
+                                    <th className="text-center px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">สถานะ</th>
+                                    <th className="text-center px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {loading ? (
+                                    <tr><td colSpan={7} className="py-20 text-center text-sm text-gray-400">กำลังโหลดข้อมูล...</td></tr>
+                                ) : filtered.length === 0 ? (
+                                    <tr><td colSpan={7} className="py-20 text-center text-sm text-gray-400">ไม่พบรายการข้อมูล</td></tr>
+                                ) : filtered.map((r, idx) => {
+                                    const cfg = STATUS_CONFIG[r.status];
+                                    return (
+                                        <tr key={r._id} className="hover:bg-gray-50/70 transition-colors">
+                                            <td className="px-6 py-4 text-xs text-gray-300 font-medium">{idx + 1}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-md bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 shrink-0">
+                                                        {r.firstName?.[0]}{r.lastName?.[0]}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-800">{r.firstName} {r.lastName}</div>
+                                                        <div className="text-xs text-gray-400 mt-0.5">{r.phone} · <span className="font-mono text-[10px]">#{r._id.toString().slice(-6).toUpperCase()}</span></div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <div className="font-semibold text-gray-800">{r.firstName} {r.lastName}</div>
-                                                    <div className="text-xs text-gray-400 mt-0.5">{r.phone} · <span className="font-mono text-[10px]">#{r._id.toString().slice(-6).toUpperCase()}</span></div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="font-medium text-gray-800 uppercase text-xs tracking-wide">{r.brand} {r.model}</div>
+                                                <div className="text-xs text-gray-400 font-mono mt-0.5">{r.imei}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-gray-700 font-medium">{r.packageType || "—"}</div>
+                                                <div className="text-xs text-gray-400">{r.devicePrice?.toLocaleString()} บาท</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
+                                                {new Date(r.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ring-1 ring-inset ${cfg.badge}`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                                                    {cfg.label}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => { setSelected(r); setPolicyNumber(r.policyNumber || ""); setReceiptFile(null); }}
+                                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-900 hover:text-white transition-all"
+                                                    >
+                                                        ดูข้อมูล <ArrowUpRight size={13} />
+                                                    </button>
+                                                    {r.status === "approved" ? (
+                                                        <button
+                                                            onClick={() => { setSelected(r); setShowCertificate(true); }}
+                                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all whitespace-nowrap shadow-sm"
+                                                        >
+                                                            ดูกรมธรรม์ <FileText size={13} />
+                                                        </button>
+                                                    ) : r.status === "paid" || r.paymentReceipt ? (
+                                                        <button
+                                                            onClick={() => { setSelected(r); setShowTransaction(true); }}
+                                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shadow-sm"
+                                                        >
+                                                            ดูหลักฐาน <CreditCard size={13} />
+                                                        </button>
+                                                    ) : (
+                                                        <div className="px-3 py-1.5 text-xs font-medium text-gray-300 italic">รอการชำระ</div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Detail Modal */}
+                {selected && !showCertificate && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]">
+                        <div className="bg-white w-full max-w-[1000px] max-h-[92vh] rounded-xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden">
+
+                            {/* Modal Header */}
+                            <div className="px-7 py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-md bg-gray-900 flex items-center justify-center text-white text-sm font-bold">
+                                        {selected.firstName?.[0]}{selected.lastName?.[0]}
+                                    </div>
+                                    <div>
+                                        <h2 className="text-base font-bold text-gray-900">{selected.firstName} {selected.lastName}</h2>
+                                        <p className="text-xs text-gray-400 font-mono">#{selected._id.toString().toUpperCase()}</p>
+                                    </div>
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ring-1 ring-inset ml-2 ${STATUS_CONFIG[selected.status].badge}`}>
+                                        {STATUS_CONFIG[selected.status].label}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {selected.status === "approved" && (
+                                        <button
+                                            onClick={() => setShowCertificate(true)}
+                                            className="flex items-center gap-2 px-4 py-2 rounded-md bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-all shadow-sm"
+                                        >
+                                            <FileText size={14} /> ดูกรมธรรม์
+                                        </button>
+                                    )}
+                                    <button onClick={() => setSelected(null)} className="w-8 h-8 rounded-md bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-all">
+                                        <XCircle size={16} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="flex-1 overflow-y-auto">
+                                <div className="grid grid-cols-[1fr_340px] divide-x divide-gray-100 h-full">
+
+                                    {/* Left: Info & Photos */}
+                                    <div className="p-7 space-y-7 overflow-y-auto">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {[
+                                                { label: "ชื่อ-นามสกุล", value: `${selected.firstName} ${selected.lastName}` },
+                                                { label: "เบอร์โทรศัพท์", value: selected.phone },
+                                                { label: "เลขบัตรประชาชน", value: selected.idCard || "—" },
+                                                { label: "อีเมล", value: selected.email || "—" },
+                                                { label: "ยี่ห้อ / รุ่น", value: `${selected.brand} ${selected.model}` },
+                                                { label: "IMEI", value: selected.imei, mono: true },
+                                                { label: "แพ็กเกจ", value: selected.packageType || "—" },
+                                                { label: "ราคาเครื่อง", value: `${selected.devicePrice?.toLocaleString()} บาท` },
+                                            ].map(item => (
+                                                <div key={item.label} className="space-y-1 p-4 bg-gray-50 rounded-lg">
+                                                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{item.label}</div>
+                                                    <div className={`text-sm font-semibold text-gray-800 ${(item as any).mono ? "font-mono text-xs" : ""}`}>{item.value}</div>
+                                                </div>
+                                            ))}
+                                            <div className="col-span-2 p-4 bg-gray-50 rounded-lg space-y-1">
+                                                <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">ที่อยู่</div>
+                                                <div className="text-sm font-semibold text-gray-800">
+                                                    {[selected.addressDetails, `ต.${selected.subDistrict}`, `อ.${selected.district}`, `จ.${selected.province}`, selected.postCode].filter(x => x && x !== "ต.undefined" && x !== "อ.undefined" && x !== "จ.undefined").join(" ")}
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-gray-800 uppercase text-xs tracking-wide">{r.brand} {r.model}</div>
-                                            <div className="text-xs text-gray-400 font-mono mt-0.5">{r.imei}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-gray-700 font-medium">{r.packageType || "—"}</div>
-                                            <div className="text-xs text-gray-400">{r.devicePrice?.toLocaleString()} บาท</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
-                                            {new Date(r.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ring-1 ring-inset ${cfg.badge}`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                                                {cfg.label}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <button
-                                                onClick={() => { setSelected(r); setPolicyNumber(r.policyNumber || ""); setReceiptFile(null); }}
-                                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-900 hover:text-white transition-all"
-                                            >
-                                                ดูข้อมูล <ArrowUpRight size={13} />
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                                <Smartphone size={13} /> รูปภาพตัวเครื่อง
+                                            </h4>
+                                            {selected.images ? (
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {Object.entries(selected.images).filter(([k]) => k !== 'receipt').map(([side, url]) => (
+                                                        <div key={side} className="aspect-[3/4] bg-gray-100 rounded-md overflow-hidden relative border border-gray-200">
+                                                            <img src={url} alt={side} className="w-full h-full object-cover" />
+                                                            <div className="absolute inset-x-0 bottom-0 bg-black/50 py-1 text-center text-[9px] text-white font-semibold uppercase">{side}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="p-8 bg-gray-50 rounded-lg text-center text-sm text-gray-400 border border-dashed border-gray-200">ไม่ได้อัปโหลดรูปภาพ</div>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                                <FileText size={13} /> ใบเสร็จการซื้อเครื่อง
+                                            </h4>
+                                            {selected.images?.receipt ? (
+                                                <div className="bg-gray-50 rounded-md overflow-hidden border border-gray-200 p-3 flex items-center justify-center max-h-48">
+                                                    <img src={selected.images.receipt} alt="receipt" className="max-h-44 object-contain" />
+                                                </div>
+                                            ) : (
+                                                <div className="p-8 bg-gray-50 rounded-lg text-center text-sm text-gray-400 border border-dashed border-gray-200">ไม่มีรูปใบเสร็จ</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Actions */}
+                                    <div className="p-7 space-y-6 bg-gray-50/50 flex flex-col">
+                                        <div>
+                                            <h3 className="text-sm font-bold text-gray-800">อนุมัติ / จัดการ</h3>
+                                            <p className="text-xs text-gray-400 mt-0.5">อัปโหลดหลักฐานและออกเลขกรมธรรม์</p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">หลักฐานการชำระเงิน (สลิป)</label>
+                                            <div className="relative">
+                                                <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={handleReceiptUpload} />
+                                                <div className={`flex items-center gap-3 px-4 py-3 rounded-md border-2 border-dashed text-sm transition-colors ${receiptFile ? "border-blue-300 bg-blue-50 text-blue-600" : "border-gray-200 bg-white text-gray-400 hover:border-gray-300"}`}>
+                                                    <Upload size={16} />
+                                                    <span className="font-medium">{receiptFile ? "✓ อัปโหลดสลิปแล้ว" : "คลิกเพื่อเลือกรูปสลิป"}</span>
+                                                </div>
+                                            </div>
+                                            {receiptFile && <img src={receiptFile} alt="slip" className="w-full max-h-36 object-contain rounded-md border border-gray-200 bg-white p-2" />}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">เลขที่กรมธรรม์</label>
+                                            <input
+                                                type="text"
+                                                placeholder="ระบุเลขกรมธรรม์..."
+                                                className="w-full px-4 py-3 rounded-md border border-gray-200 bg-white text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300 placeholder:font-normal"
+                                                value={policyNumber}
+                                                onChange={e => setPolicyNumber(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="flex-1" />
+
+                                        <div className="space-y-3 pt-4 border-t border-gray-200">
+                                            <button onClick={() => handleUpdate("approved")} disabled={actionLoading}
+                                                className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 transition-colors disabled:opacity-50">
+                                                <CheckCircle size={16} />
+                                                {actionLoading ? "กำลังดำเนินการ..." : "อนุมัติกรมธรรม์"}
                                             </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Detail Modal */}
-            {selected && !showCertificate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]">
-                    <div className="bg-white w-full max-w-[1000px] max-h-[92vh] rounded-xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden">
-
-                        {/* Modal Header */}
-                        <div className="px-7 py-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-md bg-gray-900 flex items-center justify-center text-white text-sm font-bold">
-                                    {selected.firstName?.[0]}{selected.lastName?.[0]}
+                                            <button onClick={() => handleUpdate("paid")} disabled={actionLoading}
+                                                className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50">
+                                                <CreditCard size={16} /> ยืนยันการชำระเงิน
+                                            </button>
+                                            <button onClick={() => handleUpdate("rejected")} disabled={actionLoading}
+                                                className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-white border border-gray-200 text-red-500 text-sm font-semibold hover:bg-red-50 hover:border-red-200 transition-colors disabled:opacity-50">
+                                                <XCircle size={16} /> ปฏิเสธ / ยกเลิก
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h2 className="text-base font-bold text-gray-900">{selected.firstName} {selected.lastName}</h2>
-                                    <p className="text-xs text-gray-400 font-mono">#{selected._id.toString().toUpperCase()}</p>
-                                </div>
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ring-1 ring-inset ml-2 ${STATUS_CONFIG[selected.status].badge}`}>
-                                    {STATUS_CONFIG[selected.status].label}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {selected.status === "approved" && (
-                                    <button
-                                        onClick={() => setShowCertificate(true)}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-md bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-all shadow-sm"
-                                    >
-                                        <FileText size={14} /> ดูกรมธรรม์
-                                    </button>
-                                )}
-                                <button onClick={() => setSelected(null)} className="w-8 h-8 rounded-md bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-all">
-                                    <XCircle size={16} />
-                                </button>
                             </div>
                         </div>
+                    </div>
+                )}
+            </div>
 
-                        {/* Modal Body */}
-                        <div className="flex-1 overflow-y-auto">
-                            <div className="grid grid-cols-[1fr_340px] divide-x divide-gray-100 h-full">
-
-                                {/* Left: Info & Photos */}
-                                <div className="p-7 space-y-7 overflow-y-auto">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {[
-                                            { label: "ชื่อ-นามสกุล", value: `${selected.firstName} ${selected.lastName}` },
-                                            { label: "เบอร์โทรศัพท์", value: selected.phone },
-                                            { label: "เลขบัตรประชาชน", value: selected.idCard || "—" },
-                                            { label: "อีเมล", value: selected.email || "—" },
-                                            { label: "ยี่ห้อ / รุ่น", value: `${selected.brand} ${selected.model}` },
-                                            { label: "IMEI", value: selected.imei, mono: true },
-                                            { label: "แพ็กเกจ", value: selected.packageType || "—" },
-                                            { label: "ราคาเครื่อง", value: `${selected.devicePrice?.toLocaleString()} บาท` },
-                                        ].map(item => (
-                                            <div key={item.label} className="space-y-1 p-4 bg-gray-50 rounded-lg">
-                                                <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{item.label}</div>
-                                                <div className={`text-sm font-semibold text-gray-800 ${(item as any).mono ? "font-mono text-xs" : ""}`}>{item.value}</div>
-                                            </div>
-                                        ))}
-                                        <div className="col-span-2 p-4 bg-gray-50 rounded-lg space-y-1">
-                                            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">ที่อยู่</div>
-                                            <div className="text-sm font-semibold text-gray-800">
-                                                {[selected.addressDetails, `ต.${selected.subDistrict}`, `อ.${selected.district}`, `จ.${selected.province}`, selected.postCode].filter(x => x && x !== "ต.undefined" && x !== "อ.undefined" && x !== "จ.undefined").join(" ")}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                            <Smartphone size={13} /> รูปภาพตัวเครื่อง
-                                        </h4>
-                                        {selected.images ? (
-                                            <div className="grid grid-cols-3 gap-2">
-                                                {Object.entries(selected.images).filter(([k]) => k !== 'receipt').map(([side, url]) => (
-                                                    <div key={side} className="aspect-[3/4] bg-gray-100 rounded-md overflow-hidden relative border border-gray-200">
-                                                        <img src={url} alt={side} className="w-full h-full object-cover" />
-                                                        <div className="absolute inset-x-0 bottom-0 bg-black/50 py-1 text-center text-[9px] text-white font-semibold uppercase">{side}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="p-8 bg-gray-50 rounded-lg text-center text-sm text-gray-400 border border-dashed border-gray-200">ไม่ได้อัปโหลดรูปภาพ</div>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                            <FileText size={13} /> ใบเสร็จการซื้อเครื่อง
-                                        </h4>
-                                        {selected.images?.receipt ? (
-                                            <div className="bg-gray-50 rounded-md overflow-hidden border border-gray-200 p-3 flex items-center justify-center max-h-48">
-                                                <img src={selected.images.receipt} alt="receipt" className="max-h-44 object-contain" />
-                                            </div>
-                                        ) : (
-                                            <div className="p-8 bg-gray-50 rounded-lg text-center text-sm text-gray-400 border border-dashed border-gray-200">ไม่มีรูปใบเสร็จ</div>
-                                        )}
-                                    </div>
+            {/* Transaction Modal */}
+            {showTransaction && selected && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white w-full max-w-md rounded-xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+                            <div className="flex items-center gap-2">
+                                <FileText size={18} className="text-blue-600" />
+                                <h2 className="text-base font-bold text-gray-900">หลักฐานการชำระเงิน</h2>
+                            </div>
+                            <button onClick={() => setShowTransaction(false)} className="w-8 h-8 rounded-md bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-all">
+                                <XCircle size={16} />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="flex justify-between items-start border-b border-gray-50 pb-4">
+                                <div>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">ผู้ทำรายการ</p>
+                                    <p className="text-sm font-semibold text-gray-800">{selected.firstName} {selected.lastName}</p>
                                 </div>
-
-                                {/* Right: Actions */}
-                                <div className="p-7 space-y-6 bg-gray-50/50 flex flex-col">
-                                    <div>
-                                        <h3 className="text-sm font-bold text-gray-800">อนุมัติ / จัดการ</h3>
-                                        <p className="text-xs text-gray-400 mt-0.5">อัปโหลดหลักฐานและออกเลขกรมธรรม์</p>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">หลักฐานการชำระเงิน (สลิป)</label>
-                                        <div className="relative">
-                                            <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={handleReceiptUpload} />
-                                            <div className={`flex items-center gap-3 px-4 py-3 rounded-md border-2 border-dashed text-sm transition-colors ${receiptFile ? "border-blue-300 bg-blue-50 text-blue-600" : "border-gray-200 bg-white text-gray-400 hover:border-gray-300"}`}>
-                                                <Upload size={16} />
-                                                <span className="font-medium">{receiptFile ? "✓ อัปโหลดสลิปแล้ว" : "คลิกเพื่อเลือกรูปสลิป"}</span>
-                                            </div>
-                                        </div>
-                                        {receiptFile && <img src={receiptFile} alt="slip" className="w-full max-h-36 object-contain rounded-md border border-gray-200 bg-white p-2" />}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">เลขที่กรมธรรม์</label>
-                                        <input
-                                            type="text"
-                                            placeholder="ระบุเลขกรมธรรม์..."
-                                            className="w-full px-4 py-3 rounded-md border border-gray-200 bg-white text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300 placeholder:font-normal"
-                                            value={policyNumber}
-                                            onChange={e => setPolicyNumber(e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="flex-1" />
-
-                                    <div className="space-y-3 pt-4 border-t border-gray-200">
-                                        <button onClick={() => handleUpdate("approved")} disabled={actionLoading}
-                                            className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 transition-colors disabled:opacity-50">
-                                            <CheckCircle size={16} />
-                                            {actionLoading ? "กำลังดำเนินการ..." : "อนุมัติกรมธรรม์"}
-                                        </button>
-                                        <button onClick={() => handleUpdate("paid")} disabled={actionLoading}
-                                            className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50">
-                                            <CreditCard size={16} /> ยืนยันการชำระเงิน
-                                        </button>
-                                        <button onClick={() => handleUpdate("rejected")} disabled={actionLoading}
-                                            className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-white border border-gray-200 text-red-500 text-sm font-semibold hover:bg-red-50 hover:border-red-200 transition-colors disabled:opacity-50">
-                                            <XCircle size={16} /> ปฏิเสธ / ยกเลิก
-                                        </button>
-                                    </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">เลขที่ใบสมัคร</p>
+                                    <p className="text-sm font-mono font-bold text-blue-600">#{selected._id.toString().slice(-6).toUpperCase()}</p>
                                 </div>
                             </div>
+
+                            <div>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">หลักฐานการโอนเงิน (Slip)</p>
+                                {selected.paymentReceipt ? (
+                                    <div className="bg-gray-50 rounded-lg border border-gray-100 p-2 flex items-center justify-center overflow-hidden">
+                                        <img
+                                            src={selected.paymentReceipt}
+                                            alt="payment-receipt"
+                                            className="max-h-[400px] w-full object-contain rounded-md"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="p-12 bg-gray-50 rounded-lg border border-dashed border-gray-200 text-center flex flex-col items-center gap-2">
+                                        <Clock size={32} className="text-gray-300" />
+                                        <p className="text-sm text-gray-400 font-medium">ยังไม่มีข้อมูลการชำระเงิน</p>
+                                        <p className="text-[10px] text-gray-300">รอแอดมินอัปโหลดหลักฐานในขั้นตอนอนุมัติ</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {selected.policyNumber && (
+                                <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">เลขที่กรมธรรม์ที่ออกให้</p>
+                                    <p className="text-sm font-mono font-bold text-blue-700">{selected.policyNumber}</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                            <button
+                                onClick={() => setShowTransaction(false)}
+                                className="w-full py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-100 transition-all shadow-sm"
+                            >
+                                ปิดหน้าต่าง
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

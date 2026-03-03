@@ -33,11 +33,9 @@ export function Header() {
 
                 {/* Desktop Nav */}
                 <nav className="hidden lg:flex items-center gap-8 font-medium text-[15px] text-gray-700 w-full justify-start">
-                    <Link href="/portal" className="text-blue-600 font-bold hover:text-blue-700 transition-colors py-2 border-b-2 border-blue-500">ตรวจสอบสัญญา</Link>
+                    <Link href="/check-policy" className="text-blue-600 font-bold hover:text-blue-700 transition-colors py-2 border-b-2 border-blue-500">ดาวน์โหลดกรมธรรม์</Link>
                     <Link href="/agent" className="hover:text-purple-600 transition-colors py-2 bg-slate-50 px-3 rounded-lg">สำหรับตัวแทน</Link>
-                    <Link href="#" className="hover:text-purple-600 transition-colors py-2">แพ็กเกจ</Link>
-                    <Link href="#" className="hover:text-purple-600 transition-colors py-2">บริการลูกค้า</Link>
-                    <Link href="#" className="hover:text-purple-600 transition-colors py-2">สิทธิพิเศษ</Link>
+                    <Link href="/portal" className="hover:text-purple-600 transition-colors py-2">ตรวจสอบสัญญาเงินผ่อน</Link>
                 </nav>
 
                 {/* Actions */}

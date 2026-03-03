@@ -8,6 +8,7 @@ export async function GET() {
         const users = await AdminUser.find({}).sort({ createdAt: -1 });
         return NextResponse.json(users);
     } catch (error) {
+        console.error("Failed to fetch admin users:", error);
         return NextResponse.json({ error: "Failed to fetch admin users" }, { status: 500 });
     }
 }

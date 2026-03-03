@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Smartphone, ShieldCheck, Users, Building2,
     ClipboardList, FileText, LogOut, TrendingDown, Percent,
     UserCog, UserCircle, ChevronDown, Settings, Bell, Zap,
-    Circle, ChevronsLeft, ChevronsRight,
+    Circle, ChevronsLeft, ChevronsRight, History,
 } from "lucide-react";
 
 type NavItem = { title: string; icon: React.ReactNode; href: string; badge?: string | number };
@@ -23,8 +23,9 @@ const navGroups: NavGroup[] = [
         items: [
             { title: "รายการลงทะเบียน", icon: <ClipboardList size={18} />, href: "/admin/registrations" },
             { title: "จัดการแพ็กเกจ", icon: <Zap size={18} />, href: "/admin/packages" },
+            { title: "จัดการแผน (Step 3)", icon: <ShieldCheck size={18} />, href: "/admin/coverage-plans" },
             { title: "งานเคลม", icon: <ClipboardList size={18} />, href: "/admin/claims", badge: "ใหม่" },
-            { title: "เอกสารสัญญา", icon: <FileText size={18} />, href: "/admin/contracts" },
+            { title: "ประวัติการเคลม", icon: <History size={18} />, href: "/admin/claims-history" },
         ],
     },
     {
@@ -41,13 +42,7 @@ const navGroups: NavGroup[] = [
             { title: "กำไรจริง (Amortization)", icon: <Percent size={18} />, href: "/admin/accounting" },
         ],
     },
-    {
-        group: "User Portals",
-        items: [
-            { title: "Agent Portal", icon: <Users size={18} />, href: "/admin/agent-portal" },
-            { title: "Customer Portal", icon: <UserCircle size={18} />, href: "/admin/customer-portal" },
-        ],
-    },
+
 ];
 
 interface AdminSidebarProps {
