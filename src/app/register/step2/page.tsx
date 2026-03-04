@@ -63,7 +63,7 @@ const phoneData: Record<string, string[]> = {
 
 export default function Step2() {
     const router = useRouter();
-    const { brand, setBrand, model, setModel, devicePrice, setDevicePrice } = useRegister();
+    const { brand, setBrand, model, setModel, devicePrice, setDevicePrice, setDeviceType } = useRegister();
 
     // State to toggle manual input
     const [isCustomBrand, setIsCustomBrand] = useState(false);
@@ -92,6 +92,24 @@ export default function Step2() {
             setIsCustomModel(false);
             setModel(val);
         }
+    };
+
+    const handleNext = () => {
+        // Logic to determine deviceType
+        let identifiedType = "Smartphone";
+        const m = model.toLowerCase();
+        const b = brand.toLowerCase();
+
+        if (b === "apple") {
+            if (m.includes("iphone")) identifiedType = "iPhone";
+            else if (m.includes("ipad")) identifiedType = "iPad";
+        } else {
+            // Check for tablets from other brands
+            if (m.includes("tab") || m.includes("pad")) identifiedType = "Tablet";
+        }
+
+        setDeviceType(identifiedType);
+        router.push("/register/step3");
     };
 
     const availableModels = phoneData[brand] || [];
@@ -203,7 +221,7 @@ export default function Step2() {
                     ย้อนกลับ
                 </button>
                 <button
-                    onClick={() => router.push("/register/step3")}
+                    onClick={handleNext}
                     className="w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-5 rounded-2xl text-lg transition-all shadow-xl shadow-slate-200 disabled:opacity-20 disabled:hover:bg-slate-900 uppercase tracking-widest flex items-center justify-center gap-2"
                     disabled={!brand || !model || !devicePrice}
                 >

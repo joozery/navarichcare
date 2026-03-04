@@ -6,7 +6,7 @@ import { useRegister } from "../RegisterContext";
 export default function Step6() {
     const router = useRouter();
     const {
-        phone, imei, brand, model, devicePrice, packageType, deviceImages, receiptImage,
+        phone, imei, brand, model, devicePrice, deviceType, packageType, deviceImages, receiptImage,
         firstName, setFirstName, lastName, setLastName, idCard, setIdCard, email, setEmail,
         postCode, setPostCode, province, setProvince, district, setDistrict, subDistrict, setSubDistrict, addressDetails, setAddressDetails,
         setRegistrationResult
@@ -24,6 +24,7 @@ export default function Step6() {
                     firstName, lastName, idCard, email,
                     postCode, province, district, subDistrict, addressDetails,
                     devicePrice: Number(devicePrice) || 0,
+                    deviceType,
                     packageType,
                     images: { ...deviceImages, receipt: receiptImage }
                 }),

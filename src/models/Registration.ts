@@ -22,6 +22,10 @@ const RegistrationSchema = new mongoose.Schema(
             type: Number,
             required: false,
         },
+        deviceType: {
+            type: String,
+            required: false, // iPhone, iPad, Smartphone, Tablet
+        },
         packageType: {
             type: String,
             required: false,

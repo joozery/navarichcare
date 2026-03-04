@@ -13,6 +13,8 @@ interface RegisterContextType {
     setModel: (v: string) => void;
     devicePrice: string;
     setDevicePrice: (v: string) => void;
+    deviceType: string;
+    setDeviceType: (v: string) => void;
     packageType: string;
     setPackageType: (v: string) => void;
     deviceImages: { [key: string]: string | null };
@@ -52,6 +54,7 @@ export function RegisterProvider({ children }: { children: React.ReactNode }) {
     const [brand, setBrand] = useState("");
     const [model, setModel] = useState("");
     const [devicePrice, setDevicePrice] = useState("");
+    const [deviceType, setDeviceType] = useState("");
     const [packageType, setPackageType] = useState("");
     const [deviceImages, setDeviceImagesState] = useState<{ [key: string]: string | null }>({
         front: null, back: null, left: null, right: null, top: null, bottom: null
@@ -79,6 +82,7 @@ export function RegisterProvider({ children }: { children: React.ReactNode }) {
                 if (data.brand) setBrand(data.brand);
                 if (data.model) setModel(data.model);
                 if (data.devicePrice) setDevicePrice(data.devicePrice);
+                if (data.deviceType) setDeviceType(data.deviceType);
                 if (data.packageType) setPackageType(data.packageType);
                 if (data.firstName) setFirstName(data.firstName);
                 if (data.lastName) setLastName(data.lastName);
@@ -98,7 +102,7 @@ export function RegisterProvider({ children }: { children: React.ReactNode }) {
     // Save Text only (Avoid images in localStorage because they are huge)
     useEffect(() => {
         const state = {
-            phone, imei, brand, model, devicePrice, packageType,
+            phone, imei, brand, model, devicePrice, deviceType, packageType,
             firstName, lastName, idCard, email, postCode, province, district, subDistrict, addressDetails
         };
         try {
@@ -115,7 +119,7 @@ export function RegisterProvider({ children }: { children: React.ReactNode }) {
     return (
         <RegisterContext.Provider value={{
             phone, setPhone, imei, setImei, brand, setBrand, model, setModel,
-            devicePrice, setDevicePrice, packageType, setPackageType,
+            devicePrice, setDevicePrice, deviceType, setDeviceType, packageType, setPackageType,
             deviceImages, setDeviceImages, receiptImage, setReceiptImage,
             firstName, setFirstName, lastName, setLastName, idCard, setIdCard, email, setEmail,
             postCode, setPostCode, province, setProvince, district, setDistrict, subDistrict, setSubDistrict, addressDetails, setAddressDetails,

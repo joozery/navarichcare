@@ -5,7 +5,7 @@ import { useRegister } from "../RegisterContext";
 
 export default function Step3() {
     const router = useRouter();
-    const { devicePrice, packageType, setPackageType } = useRegister();
+    const { devicePrice, deviceType, packageType, setPackageType } = useRegister();
     const [packages, setPackages] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
     const priceNum = Number(devicePrice) || 0;
@@ -15,7 +15,11 @@ export default function Step3() {
             try {
                 const res = await fetch("/api/coverage-plans");
                 const data = await res.json();
-                setPackages(data.filter((p: any) => p.isActive));
+
+                // Filter by isActive AND deviceType
+                // If deviceType is null/empty, we default to Smartphone for backward compatibility
+                const currentType = deviceType || "Smartphone";
+                setPackages(data.filter((p: any) => p.isActive && p.deviceType === currentType));
             } catch (err) {
                 console.error(err);
             } finally {
@@ -23,7 +27,7 @@ export default function Step3() {
             }
         };
         fetchPlans();
-    }, []);
+    }, [deviceType]);
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center py-20 gap-4">

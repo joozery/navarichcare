@@ -16,7 +16,8 @@ export default function NewCoveragePlan() {
         priceMultiplier: 0.05,
         highlights: [""],
         order: 0,
-        isActive: true
+        isActive: true,
+        deviceType: "Smartphone"
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -127,6 +128,21 @@ export default function NewCoveragePlan() {
                             value={form.order}
                             onChange={e => setForm({ ...form, order: Number(e.target.value) })}
                         />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ประเภทอุปกรณ์ (Device Type)</label>
+                        <select
+                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none transition-all font-bold text-slate-900 appearance-none cursor-pointer"
+                            value={form.deviceType}
+                            onChange={e => setForm({ ...form, deviceType: e.target.value })}
+                            required
+                        >
+                            <option value="iPhone">iPhone</option>
+                            <option value="iPad">iPad</option>
+                            <option value="Smartphone">Smartphone (Android)</option>
+                            <option value="Tablet">Tablet (Android)</option>
+                        </select>
                     </div>
 
                     {/* Highlights Section */}

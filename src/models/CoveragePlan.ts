@@ -34,6 +34,12 @@ const CoveragePlanSchema = new Schema(
             type: Boolean,
             default: true,
         },
+        deviceType: {
+            type: String,
+            enum: ["iPhone", "iPad", "Smartphone", "Tablet"],
+            required: [true, "Please specify device type (iPhone, iPad, Smartphone, Tablet)"],
+            default: "Smartphone",
+        },
     },
     {
         timestamps: true,
