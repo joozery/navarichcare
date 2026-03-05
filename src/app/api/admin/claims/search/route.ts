@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Registration from "@/models/Registration";
+import CoveragePlan from "@/models/CoveragePlan";
+import Claim from "@/models/Claim";
 
 export async function POST(req: Request) {
     try {
@@ -13,12 +15,16 @@ export async function POST(req: Request) {
 
         // ค้นหาจาก IMEI หรือ เลขบัตรประชาชน แบบตรงๆ
         const cleanQuery = query.trim();
+        // Optimized lookup
         const registration = await Registration.findOne({
             $or: [
                 { imei: cleanQuery },
                 { idCard: cleanQuery }
             ]
-        }).sort({ createdAt: -1 });
+        })
+            .select("firstName lastName imei idCard brand model policyNumber packageType status approvedAt createdAt")
+            .sort({ createdAt: -1 })
+            .lean();
 
         if (!registration) {
             return NextResponse.json({ error: "ไม่พบข้อมูลในระบบ หรือไม่มีกรมธรรม์ที่เปิดใช้งานอยู่" }, { status: 404 });
@@ -30,9 +36,27 @@ export async function POST(req: Request) {
             }, { status: 403 });
         }
 
+        // Parallel execution for remaining data
+        const [coveragePlan, previousClaims, draftClaim] = await Promise.all([
+            CoveragePlan.findById(registration.packageType).lean(),
+            Claim.find({
+                registrationId: registration._id,
+                status: "completed"
+            }).select("consumedQuotaName status").lean(),
+            Claim.findOne({
+                registrationId: registration._id,
+                status: "draft"
+            }).sort({ updatedAt: -1 }).lean()
+        ]);
+
         return NextResponse.json({
             success: true,
-            data: registration
+            data: {
+                ...registration,
+                coveragePlan: coveragePlan || null,
+                previousClaims: previousClaims || [],
+                draftClaim: draftClaim || null
+            }
         });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

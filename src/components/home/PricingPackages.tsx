@@ -5,6 +5,7 @@ import Link from "next/link";
 
 interface IPackage {
     _id: string;
+    title: string;
     range: string;
     monthlyPrice: number;
     yearlyPrice: number;
@@ -51,7 +52,7 @@ export function PricingPackages() {
                         >
                             {/* Header */}
                             <div>
-                                <h3 className="text-xl font-black text-gray-800 mb-0.5 leading-tight">ราคาเครื่อง</h3>
+                                <h3 className="text-xl font-black text-gray-800 mb-0.5 leading-tight">{plan.title || "ราคาเครื่อง"}</h3>
                                 <p className="text-lg font-bold text-gray-500">{plan.range}</p>
                             </div>
 

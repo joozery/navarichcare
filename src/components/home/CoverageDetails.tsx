@@ -21,12 +21,16 @@ const coverageItems = [
         icon: "/icons/coverage/laser-damage.png",
         label: "Laser Damage",
     },
+    {
+        icon: "/icons/coverage/stolen-device.png",
+        label: "เครื่องถูกขโมย",
+    },
 ];
 
 export function CoverageDetails() {
     return (
         <section className="py-24 bg-gradient-to-r from-blue-100/60 via-purple-100/50 to-white">
-            <div className="max-w-5xl mx-auto px-4 md:px-8">
+            <div className="max-w-6xl mx-auto px-4 md:px-8">
 
                 {/* Heading */}
                 <h2 className="text-3xl md:text-4xl font-black text-gray-800 text-center mb-12">
@@ -34,7 +38,7 @@ export function CoverageDetails() {
                 </h2>
 
                 {/* Icon Grid */}
-                <div className="grid grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                     {coverageItems.map((item) => (
                         <div
                             key={item.label}

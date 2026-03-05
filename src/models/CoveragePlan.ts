@@ -40,12 +40,22 @@ const CoveragePlanSchema = new Schema(
             required: [true, "Please specify device type (iPhone, iPad, Smartphone, Tablet)"],
             default: "Smartphone",
         },
+        quotas: {
+            type: [
+                {
+                    name: String, // e.g., 'จอแตก'
+                    maxLimit: Number, // e.g., 2
+                    icon: { type: String, default: "Monitor" }, // string for lucide icon
+                }
+            ],
+            default: []
+        }
     },
     {
         timestamps: true,
     }
 );
 
-const CoveragePlan = models.CoveragePlan || model("CoveragePlan", CoveragePlanSchema);
+const CoveragePlan = mongoose.models.CoveragePlan || mongoose.model("CoveragePlan", CoveragePlanSchema);
 
 export default CoveragePlan;

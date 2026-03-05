@@ -6,6 +6,7 @@ import { Plus, Trash2, Edit2, Save, X, Smartphone, ShieldCheck } from "lucide-re
 interface IPackage {
     _id?: string;
     name: string;
+    title: string;
     range: string;
     monthlyPrice: number;
     yearlyPrice: number;
@@ -22,6 +23,7 @@ export default function PackagesAdmin() {
     const [showAddForm, setShowAddForm] = useState(false);
     const [newForm, setNewForm] = useState<IPackage>({
         name: "",
+        title: "ราคาเครื่อง",
         range: "",
         monthlyPrice: 0,
         yearlyPrice: 0,
@@ -57,7 +59,7 @@ export default function PackagesAdmin() {
             if (res.ok) {
                 fetchPackages();
                 setShowAddForm(false);
-                setNewForm({ name: "", range: "", monthlyPrice: 0, yearlyPrice: 0, isActive: true, order: 0, highlights: [] });
+                setNewForm({ name: "", title: "ราคาเครื่อง", range: "", monthlyPrice: 0, yearlyPrice: 0, isActive: true, order: 0, highlights: [] });
             }
         } catch (error) {
             console.error(error);
@@ -136,6 +138,16 @@ export default function PackagesAdmin() {
                                     placeholder="เช่น Plan A, Gold, Platinum"
                                     value={showAddForm ? newForm.name : editForm?.name}
                                     onChange={e => showAddForm ? setNewForm({ ...newForm, name: e.target.value }) : setEditForm({ ...editForm!, name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-gray-500 ml-1 uppercase">หัวข้อบนการ์ด (เช่น ราคาเครื่อง)</label>
+                                <input
+                                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-blue-500 outline-none transition-all font-medium text-sm"
+                                    placeholder="เช่น ราคาเครื่อง"
+                                    value={showAddForm ? newForm.title : editForm?.title}
+                                    onChange={e => showAddForm ? setNewForm({ ...newForm, title: e.target.value }) : setEditForm({ ...editForm!, title: e.target.value })}
                                     required
                                 />
                             </div>
@@ -254,7 +266,7 @@ export default function PackagesAdmin() {
                         <div className="bg-white rounded-3xl p-8 shadow-xl shadow-gray-200/40 border border-gray-100 flex flex-col h-full transition-all duration-300">
                             {/* Header */}
                             <div className="mb-6">
-                                <h3 className="text-lg font-black text-gray-800 mb-0.5 leading-tight">ราคาเครื่อง</h3>
+                                <h3 className="text-lg font-black text-gray-800 mb-0.5 leading-tight">{pkg.title || "ราคาเครื่อง"}</h3>
                                 <p className="text-base font-bold text-gray-500">{pkg.range}</p>
                             </div>
 

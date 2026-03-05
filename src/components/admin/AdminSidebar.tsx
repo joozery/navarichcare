@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-    LayoutDashboard, Smartphone, ShieldCheck, Users, Building2,
+    LayoutDashboard, Smartphone, ShieldCheck, Users,
     ClipboardList, FileText, LogOut, TrendingDown, Percent,
     UserCog, UserCircle, ChevronDown, Settings, Bell, Zap,
     Circle, ChevronsLeft, ChevronsRight, History,
@@ -32,7 +32,6 @@ const navGroups: NavGroup[] = [
         group: "บุคลากร",
         items: [
             { title: "จัดการแอดมิน", icon: <UserCog size={18} />, href: "/admin/users" },
-            { title: "สาขา & พนักงาน", icon: <Building2 size={18} />, href: "/admin/branches" },
             { title: "ตัวแทน (Agents)", icon: <Users size={18} />, href: "/admin/agents" },
         ],
     },
@@ -42,7 +41,12 @@ const navGroups: NavGroup[] = [
             { title: "กำไรจริง (Amortization)", icon: <Percent size={18} />, href: "/admin/accounting" },
         ],
     },
-
+    {
+        group: "เนื้อหาเว็บไซต์",
+        items: [
+            { title: "เงื่อนไข & ข้อตกลง", icon: <FileText size={18} />, href: "/admin/terms" },
+        ],
+    },
 ];
 
 interface AdminSidebarProps {

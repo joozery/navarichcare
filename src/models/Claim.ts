@@ -60,7 +60,9 @@ const ClaimSchema: Schema = new Schema(
         }],
         postRepairNote: { type: String },
         postRepairImages: [{ type: String }],
-        status: { type: String, enum: ["completed", "pending", "rejected"], default: "completed" },
+        status: { type: String, enum: ["completed", "pending", "rejected", "draft"], default: "draft" },
+        currentStep: { type: Number, default: 1 },
+        consumedQuotaName: { type: String }, // name of the quota being used
         createdBy: { type: String, default: "admin" },
     },
     { timestamps: true }

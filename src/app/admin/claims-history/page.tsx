@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ClipboardList, Search, Eye, CheckCircle, Wrench, Calendar, CreditCard, Package, AlertCircle, Loader2 } from "lucide-react";
+import { ClipboardList, Search, Eye, CheckCircle, Wrench, Calendar, CreditCard, Package, AlertCircle, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 interface Claim {
@@ -25,11 +25,13 @@ const statusColor: Record<string, string> = {
     completed: "bg-emerald-50 text-emerald-700 border border-emerald-200",
     pending: "bg-amber-50 text-amber-700 border border-amber-200",
     rejected: "bg-red-50 text-red-700 border border-red-200",
+    draft: "bg-slate-100 text-slate-700 border border-slate-300",
 };
 const statusLabel: Record<string, string> = {
     completed: "✓ เสร็จสิ้น",
     pending: "⏳ รอดำเนินการ",
     rejected: "✗ ปฏิเสธ",
+    draft: "📝 กำลังบันทึก",
 };
 
 export default function ClaimsHistoryPage() {
@@ -38,8 +40,10 @@ export default function ClaimsHistoryPage() {
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<Claim | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    useEffect(() => {
+    const loadClaims = () => {
+        setLoading(true);
         fetch("/api/admin/claims")
             .then(r => r.json())
             .then(d => {
@@ -48,7 +52,30 @@ export default function ClaimsHistoryPage() {
             })
             .catch(() => setError("เกิดข้อผิดพลาดในการเชื่อมต่อ"))
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        loadClaims();
     }, []);
+
+    const handleDelete = async (id: string, name: string) => {
+        if (!confirm(`ยืนยันการลบรายการเคลมของ "${name}" ใช่หรือไม่?\nการลบจะไม่คืนโควต้าสิทธิ์ (หากรายการเสร็จสิ้นไปแล้ว)`)) return;
+
+        setDeletingId(id);
+        try {
+            const r = await fetch(`/api/admin/claims?id=${id}`, { method: "DELETE" });
+            const d = await r.json();
+            if (d.success) {
+                setClaims(prev => prev.filter(c => c._id !== id));
+            } else {
+                alert("ลบไม่สำเร็จ: " + d.error);
+            }
+        } catch (e) {
+            alert("เกิดข้อผิดพลาดในการลบ");
+        } finally {
+            setDeletingId(null);
+        }
+    };
 
     const filtered = claims.filter(c =>
         c.customerName?.includes(search) ||
@@ -59,6 +86,7 @@ export default function ClaimsHistoryPage() {
 
     const totalDeductible = claims.filter(c => c.status === "completed").reduce((s, c) => s + (c.deductibleAmount || 0), 0);
     const totalParts = claims.filter(c => c.status === "completed").reduce((s, c) => s + (c.parts || []).reduce((ps, p) => ps + p.qty * p.unitCost, 0), 0);
+
 
     return (
         <div className="space-y-6">
@@ -166,20 +194,45 @@ export default function ClaimsHistoryPage() {
                                                 {claim.deductibleAmount > 0 && <div className="text-[10px] text-blue-500 font-bold">Deduct: ฿{claim.deductibleAmount.toLocaleString()}</div>}
                                             </td>
                                             <td className="p-4 text-center">
-                                                <span className={`text-[10px] font-black px-3 py-1.5 rounded-full ${statusColor[claim.status] || ""}`}>
-                                                    {statusLabel[claim.status] || claim.status}
-                                                </span>
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <span className={`text-[10px] font-black px-3 py-1.5 rounded-full ${statusColor[claim.status] || ""}`}>
+                                                        {statusLabel[claim.status] || claim.status}
+                                                    </span>
+                                                    {claim.status === "draft" && (
+                                                        <span className="text-[10px] text-slate-400 font-bold bg-slate-100 px-2 py-0.5 rounded-md">
+                                                            ค้างที่ขั้นตอน {(claim as any).currentStep || 1}/6
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="p-4 hidden sm:table-cell">
                                                 <div className="text-xs font-bold text-slate-500">{new Date(claim.createdAt).toLocaleDateString("th-TH")}</div>
                                                 <div className="text-[10px] text-slate-300">{new Date(claim.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}</div>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-4 flex justify-end gap-2">
+                                                {claim.status === "draft" && (
+                                                    <Link
+                                                        href={`/admin/claims?imei=${claim.imei}`}
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg"
+                                                        title="ทำรายการต่อ"
+                                                    >
+                                                        <Wrench size={15} />
+                                                    </Link>
+                                                )}
                                                 <button
                                                     onClick={() => setSelected(claim)}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-500 rounded-lg"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-800 hover:text-white text-slate-500 rounded-lg"
+                                                    title="ดูรายละเอียด"
                                                 >
                                                     <Eye size={15} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(claim._id, claim.customerName)}
+                                                    disabled={deletingId === claim._id}
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-500 hover:text-white rounded-lg disabled:opacity-50"
+                                                    title="ลบรายการ"
+                                                >
+                                                    {deletingId === claim._id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={15} />}
                                                 </button>
                                             </td>
                                         </tr>
@@ -247,10 +300,18 @@ export default function ClaimsHistoryPage() {
                                 </div>
                             )}
                         </div>
-                        <div className="p-6 border-t border-slate-100">
-                            <button onClick={() => setSelected(null)} className="w-full bg-slate-900 text-white font-black py-3 rounded-xl hover:bg-blue-600 transition-all">
+                        <div className="p-6 border-t border-slate-100 flex gap-3">
+                            <button onClick={() => setSelected(null)} className="flex-1 bg-slate-100 text-slate-700 font-black py-3 rounded-xl hover:bg-slate-200 transition-all">
                                 ปิด
                             </button>
+                            {selected.status === "draft" && (
+                                <Link
+                                    href={`/admin/claims?imei=${selected.imei}`}
+                                    className="flex-1 text-center bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
+                                >
+                                    ทำรายการต่อ →
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

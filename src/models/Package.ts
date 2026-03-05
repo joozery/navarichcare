@@ -6,6 +6,10 @@ const PackageSchema = new Schema(
             type: String,
             required: [true, "Please provide a package name"],
         },
+        title: {
+            type: String,
+            default: "ราคาเครื่อง",
+        },
         range: {
             type: String,
             required: [true, "Please provide a price range"],

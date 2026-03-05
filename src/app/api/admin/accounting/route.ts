@@ -1,41 +1,53 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import Loan from "@/models/Loan";
-import Insurance from "@/models/Insurance";
+import Registration from "@/models/Registration";
+import Claim from "@/models/Claim";
+import CoveragePlan from "@/models/CoveragePlan";
 
 export async function GET() {
     try {
         await dbConnect();
 
-        // Find all loans that have insurance (assuming all loans right now)
-        const loans = await Loan.find({ status: { $ne: "closed" } }).populate('agentId branchId');
+        // 1. Calculate Insurance Sales (Income)
+        // Fetch only needed fields and use lean() for faster processing
+        const registrations = await Registration.find({ status: { $in: ["approved", "paid"] } })
+            .select("devicePrice packageType")
+            .lean();
 
-        let totalUnrecognized = 0;
-        let recognizedThisMonth = 0;
-        const recentAmortizations: any[] = [];
+        const plans = await CoveragePlan.find({}).select("_id priceMultiplier").lean();
+        const planMap = new Map(plans.map((p: any) => [p._id.toString(), p.priceMultiplier]));
 
-        loans.forEach(loan => {
-            // Assume insurance fee is 10% of loanAmount (as per accounting UI logic)
-            const fee = loan.loanAmount * 0.1;
-            const perMonth = fee / 36;
-
-            const remainingMonths = 36 - loan.paidInstallments;
-            totalUnrecognized += (perMonth * Math.max(0, remainingMonths));
-            recognizedThisMonth += perMonth;
-
-            recentAmortizations.push({
-                device: loan.deviceModel,
-                id: loan.contractId,
-                perMonth: perMonth,
-                month: loan.paidInstallments + 1
-            });
+        let totalInsuranceSales = 0;
+        registrations.forEach((r: any) => {
+            const multiplier = planMap.get(r.packageType) || 0;
+            totalInsuranceSales += (r.devicePrice || 0) * multiplier;
         });
+
+        // 2. Calculate Claims (Expense)
+        // Fetch only needed fields and use lean()
+        const claims = await Claim.find({ status: "completed" })
+            .select("parts deductibleAmount createdAt customerName deviceModel")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        let totalPartsCost = 0;
+        let totalDeductibleAmount = 0;
+
+        claims.forEach((c: any) => {
+            const partsCost = c.parts?.reduce((sum: number, p: any) => sum + (p.qty * p.unitCost), 0) || 0;
+            totalPartsCost += partsCost;
+            totalDeductibleAmount += (c.deductibleAmount || 0);
+        });
+
+        const netClaimExpense = totalPartsCost - totalDeductibleAmount;
 
         return NextResponse.json({
             success: true,
-            totalUnrecognized,
-            recognizedThisMonth,
-            recentAmortizations: recentAmortizations.slice(-5)
+            totalInsuranceSales,
+            totalPartsCost,
+            totalDeductibleAmount,
+            netClaimExpense,
+            recentClaims: claims.slice(0, 5) // since we sorted descending, take first 5
         });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

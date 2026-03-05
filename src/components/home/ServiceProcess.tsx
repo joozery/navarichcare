@@ -1,49 +1,33 @@
+"use client";
+import { useEffect, useState } from "react";
+
+interface ServiceRow {
+    request: string;
+    delivery: string;
+    area: string;
+    shade: boolean;
+}
+
 export function ServiceProcess() {
-    const rows = [
-        {
-            request: "ภายในวัน (Same day)",
-            delivery: "เจ้าหน้าที่เข้ารับภายในวัน",
-            area: "กรุงเทพมหานคร, สมุทรปราการ, นนทบุรี, ปทุมธานี, มหาชัย, สาลาคาม",
-            shade: false,
-        },
-        {
-            request: (
-                <>
-                    ขอรับบริการเวลา<br />8.00 - 14.00 น.
-                </>
-            ),
-            delivery: "เจ้าหน้าที่เข้ารับเครื่องในวันตัดไป",
-            area: "กรุงเทพมหานคร และปริมณฑล",
-            shade: true,
-        },
-        {
-            request: (
-                <>
-                    ขอรับบริการ 8.00 - 14.00 น.<br />(พื้นที่ต่างจังหวัด)
-                </>
-            ),
-            delivery: "เจ้าหน้าที่เข้ารับเครื่องภายใน 2-3 วันทำการ",
-            area: (
-                <>
-                    <p><span className="font-bold text-gray-800">ภาคเหนือ :</span> เชียงใหม่, ลำพูน, เชียงราย, พะเยา, น่าน, แพร่, ตาก, สุโขทัย, อุตรดิตถ์, พิษณุโลก, กำแพงเพชร และพิจิตร</p>
-                    <p className="mt-1.5"><span className="font-bold text-gray-800">ภาคกลาง :</span> ลพบุรี, สิงห์บุรี, ชัยนาท, นครสวรรค์, อุทัยธานี, สุพรรณบุรี และอ่างทอง</p>
-                    <p className="mt-1.5"><span className="font-bold text-gray-800">ภาคตะวันออก :</span> ชลบุรี, ระยอง, สระแก้ว, ปราจีนบุรี, จันทบุรี และตราด</p>
-                    <p className="mt-1.5"><span className="font-bold text-gray-800">ภาคตะวันตก :</span> ราชบุรี, กาญจนบุรี, เพชรบุรี และประจวบคีรีขันธ์</p>
-                </>
-            ),
-            shade: false,
-        },
-        {
-            request: (
-                <>
-                    ขอรับบริการ 8.00 - 14.00 น.<br />(พื้นที่ห่างไกล)
-                </>
-            ),
-            delivery: "เจ้าหน้าที่เข้ารับเครื่องภายใน 3-5 วันทำการ",
-            area: "แม่ฮ่องสอน, ยะลา, ปัตตานี, นราธิวาส เกาะต่างๆ (เกาะสมุย, เกาะพะงัน, เกาะเต้า, เกาะช้าง เป็นต้น)",
-            shade: true,
-        },
-    ];
+    const [data, setData] = useState<{
+        title: string;
+        subtitle: string;
+        columns: string[];
+        rows: ServiceRow[];
+        footer: string;
+    } | null>(null);
+
+    useEffect(() => {
+        fetch("/api/admin/service-request")
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) setData(d.data);
+            });
+    }, []);
+
+    if (!data) return null;
+
+    const { title, subtitle, columns, rows, footer } = data;
 
     return (
         <section className="py-20 bg-white">
@@ -53,19 +37,19 @@ export function ServiceProcess() {
 
                     {/* Dark Header */}
                     <div className="bg-gray-950 text-white text-center py-7 px-6">
-                        <p className="text-sm font-bold text-blue-200 mb-1.5 tracking-wider uppercase">Service Request</p>
+                        <p className="text-sm font-bold text-blue-200 mb-1.5 tracking-wider uppercase">{subtitle}</p>
                         <p className="text-xl md:text-2xl font-black">
-                            เปลี่ยนเครื่อง รับเครื่องทดแทน หรือการซ่อมแซมเครื่อง
+                            {title}
                         </p>
                     </div>
 
                     {/* Blue Column Headers */}
                     <div className="grid grid-cols-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold text-sm md:text-base">
-                        <div className="px-6 py-4 border-r border-white/20 flex items-center">รับคำขอใช้บริการ</div>
-                        <div className="px-6 py-4 border-r border-white/20 flex items-center">ระยะเวลาในการจัดส่ง</div>
-                        <div className="px-6 py-4 flex items-center text-center leading-snug">
-                            พื้นที่ให้บริการเข้ารับ/<br />จัดส่งอุปกรณ์โทรศัพท์เคลื่อนที่
-                        </div>
+                        {columns.map((col, idx) => (
+                            <div key={idx} className={`px-6 py-4 flex items-center ${idx < 2 ? 'border-r border-white/20' : ''} text-center leading-snug whitespace-pre-line`}>
+                                {col}
+                            </div>
+                        ))}
                     </div>
 
                     {/* Rows */}
@@ -74,13 +58,13 @@ export function ServiceProcess() {
                             key={i}
                             className={`grid grid-cols-3 border-t border-blue-50 text-sm md:text-base ${row.shade ? "bg-blue-50/40" : "bg-white"}`}
                         >
-                            <div className="px-6 py-5 border-r border-blue-50 font-bold text-blue-700 flex items-center">
+                            <div className="px-6 py-5 border-r border-blue-50 font-bold text-blue-700 flex items-center whitespace-pre-line">
                                 {row.request}
                             </div>
-                            <div className="px-6 py-5 border-r border-blue-50 text-gray-600 flex items-center">
+                            <div className="px-6 py-5 border-r border-blue-50 text-gray-600 flex items-center whitespace-pre-line">
                                 {row.delivery}
                             </div>
-                            <div className="px-6 py-5 text-gray-600 text-sm leading-relaxed">
+                            <div className="px-6 py-5 text-gray-600 text-sm leading-relaxed whitespace-pre-line">
                                 {row.area}
                             </div>
                         </div>
@@ -88,7 +72,7 @@ export function ServiceProcess() {
 
                     {/* Footer */}
                     <div className="bg-gray-950 text-white text-center text-sm py-4 px-6">
-                        ในรับรองสิทธิการรับบริการ ระยะจัดส่งไปยัง email ลูกค้า ภายใน 7 วันทำการ
+                        {footer}
                     </div>
 
                 </div>

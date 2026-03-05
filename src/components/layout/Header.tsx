@@ -35,7 +35,7 @@ export function Header() {
                 <nav className="hidden lg:flex items-center gap-8 font-medium text-[15px] text-gray-700 w-full justify-start">
                     <Link href="/check-policy" className="text-blue-600 font-bold hover:text-blue-700 transition-colors py-2 border-b-2 border-blue-500">ดาวน์โหลดกรมธรรม์</Link>
                     <Link href="/agent" className="hover:text-purple-600 transition-colors py-2 bg-slate-50 px-3 rounded-lg">สำหรับตัวแทน</Link>
-                    <Link href="/portal" className="hover:text-purple-600 transition-colors py-2">ตรวจสอบสัญญาเงินผ่อน</Link>
+
                 </nav>
 
                 {/* Actions */}

@@ -1,7 +1,8 @@
 "use client";
-import React, { useState } from "react";
-import { Search, ShieldCheck, CheckSquare, CreditCard, Wrench, ClipboardList, FileCheck, ChevronRight, Monitor, Droplets, Battery, ImageIcon, AlertCircle, Plus, Trash2, Camera, UploadCloud, Receipt, Wallet, FileText, Package, Tag, Hash, ExternalLink, Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, ShieldCheck, CheckSquare, CreditCard, Wrench, ClipboardList, FileCheck, ChevronRight, Monitor, Droplets, Battery, ImageIcon, AlertCircle, Plus, Trash2, Camera, UploadCloud, Receipt, Wallet, FileText, Package, Tag, Hash, ExternalLink, Loader2, Cpu, Settings } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 const steps = [
     { n: 1, title: "ค้นหาด้วย IMEI/บัตรประชาชน", icon: <Search size={16} /> },
@@ -12,21 +13,40 @@ const steps = [
     { n: 6, title: "ตัดสิทธิ์", icon: <FileCheck size={16} /> },
 ];
 
-const quota = [
-    { type: "Screen", title: "จอแตก", remaining: 1, total: 2, icon: <Monitor size={18} />, deductible: "฿1,000" },
-    { type: "Water", title: "น้ำเข้า", remaining: 1, total: 1, icon: <Droplets size={18} />, deductible: "฿1,500" },
-    { type: "Battery", title: "แบตเตอรี่", remaining: 1, total: 1, icon: <Battery size={18} />, deductible: "ฟรี" },
-];
+// Helper to get Icon Component from string
+const QuotaIcon = ({ name, size = 18 }: { name: string; size?: number }) => {
+    switch (name) {
+        case "Monitor": return <Monitor size={size} />;
+        case "Droplets": return <Droplets size={size} />;
+        case "Battery": return <Battery size={size} />;
+        case "Cpu": return <Cpu size={size} />;
+        default: return <Settings size={size} />;
+    }
+};
 
 export default function ClaimsPage() {
+    const searchParams = useSearchParams();
     const [activeStep, setActiveStep] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
     const [showNew, setShowNew] = useState(false);
+
+    // Auto-load if opened from history
+    useEffect(() => {
+        const imeiParam = searchParams?.get("imei");
+        if (imeiParam) {
+            setSearchQuery(imeiParam);
+            setShowNew(true);
+            setTimeout(() => {
+                document.getElementById('search-claim-btn')?.click();
+            }, 500);
+        }
+    }, [searchParams]);
 
     // API States
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
     const [customerData, setCustomerData] = useState<any>(null);
+    const [selectedQuotaName, setSelectedQuotaName] = useState("");
 
     // Void Check States (Step 2)
     const [voidChecklist, setVoidChecklist] = useState([
@@ -69,11 +89,23 @@ export default function ClaimsPage() {
     const [claimDone, setClaimDone] = useState(false);
     const [saving, setSaving] = useState(false);
     const [savedClaimId, setSavedClaimId] = useState<string | null>(null);
+    const [currentClaimId, setCurrentClaimId] = useState<string | null>(null);
+    const [notification, setNotification] = useState<{ msg: string, type: 'success' | 'error' | 'info' } | null>(null);
+    const [confirmModal, setConfirmModal] = useState<{ show: boolean, draft: any } | null>(null);
 
-    const handleConfirmClaim = async () => {
+    // Auto-hide notification
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => setNotification(null), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
+    const handleSaveDraft = async () => {
         setSaving(true);
         try {
             const payload = {
+                _id: currentClaimId,
                 customerName: customerData ? `${customerData.firstName} ${customerData.lastName}` : "",
                 idCard: customerData?.idCard || "",
                 imei: customerData?.imei || searchQuery,
@@ -83,23 +115,80 @@ export default function ClaimsPage() {
                 registrationId: customerData?._id || null,
                 voidChecklist,
                 preRepairNote,
+                preRepairImages,
                 deductibleItem,
                 deductibleDetail,
                 deductibleAmount: Number(deductibleAmount) || 0,
+                paymentSlip,
                 parts,
                 postRepairNote,
-                status: "completed",
+                postRepairImages,
+                consumedQuotaName: selectedQuotaName,
+                status: "draft",
+                currentStep: activeStep
             };
+
+            const isUpdate = !!currentClaimId;
             const res = await fetch("/api/admin/claims", {
-                method: "POST",
+                method: isUpdate ? "PUT" : "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
             const data = await res.json();
-            if (data.success) setSavedClaimId(data.data._id);
-            else alert("เกิดข้อผิดพลาด: " + data.error);
+            if (data.success) {
+                setCurrentClaimId(data.data._id);
+                setNotification({ msg: "บันทึกฉบับร่างเรียบร้อยแล้ว", type: "success" });
+            } else {
+                setNotification({ msg: "เกิดข้อผิดพลาด: " + data.error, type: "error" });
+            }
+        } catch (error) {
+            console.error(error);
+            setNotification({ msg: "เกิดข้อผิดพลาดในการบันทึก", type: "error" });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleConfirmClaim = async () => {
+        setSaving(true);
+        try {
+            const payload = {
+                _id: currentClaimId,
+                customerName: customerData ? `${customerData.firstName} ${customerData.lastName}` : "",
+                idCard: customerData?.idCard || "",
+                imei: customerData?.imei || searchQuery,
+                brand: customerData?.brand || "",
+                deviceModel: customerData?.model || "",
+                policyNumber: customerData?.policyNumber || "",
+                registrationId: customerData?._id || null,
+                voidChecklist,
+                preRepairNote,
+                preRepairImages,
+                deductibleItem,
+                deductibleDetail,
+                deductibleAmount: Number(deductibleAmount) || 0,
+                paymentSlip,
+                parts,
+                postRepairNote,
+                postRepairImages,
+                consumedQuotaName: selectedQuotaName,
+                status: "completed",
+            };
+            const isUpdate = !!currentClaimId;
+            const res = await fetch("/api/admin/claims", {
+                method: isUpdate ? "PUT" : "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSavedClaimId(data.data._id);
+                setNotification({ msg: "บันทึกข้อมูลและตัดสิทธิ์เรียบร้อยแล้ว", type: "success" });
+            } else {
+                setNotification({ msg: "เกิดข้อผิดพลาด: " + data.error, type: "error" });
+            }
         } catch {
-            alert("เกิดข้อผิดพลาดในการบันทึก");
+            setNotification({ msg: "เกิดข้อผิดพลาดในการบันทึก", type: "error" });
         } finally {
             setSaving(false);
             setClaimDone(true);
@@ -111,6 +200,8 @@ export default function ClaimsPage() {
         setLoading(true);
         setErrorMsg("");
         setCustomerData(null);
+        setCurrentClaimId(null);
+        setActiveStep(1);
 
         try {
             const res = await fetch("/api/admin/claims/search", {
@@ -124,6 +215,15 @@ export default function ClaimsPage() {
                 setErrorMsg(data.error);
             } else {
                 setCustomerData(data.data);
+
+                if (data.data.draftClaim) {
+                    setConfirmModal({ show: true, draft: data.data.draftClaim });
+                } else {
+                    if (data.data.coveragePlan?.quotas?.length > 0) {
+                        setSelectedQuotaName(data.data.coveragePlan.quotas[0].name);
+                        setDeductibleItem(`ค่าบริการ${data.data.coveragePlan.quotas[0].name}`);
+                    }
+                }
             }
         } catch (error) {
             setErrorMsg("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
@@ -131,6 +231,26 @@ export default function ClaimsPage() {
             setLoading(false);
         }
     };
+
+    // Calculate Dynamic Quotas
+    const getDynamicQuotas = () => {
+        if (!customerData || !customerData.coveragePlan) return [];
+
+        const planQuotas = customerData.coveragePlan.quotas || [];
+        const prevClaims = customerData.previousClaims || [];
+
+        return planQuotas.map((q: any) => {
+            const usedCount = prevClaims.filter((c: any) => c.consumedQuotaName === q.name).length;
+            return {
+                ...q,
+                remaining: Math.max(0, q.maxLimit - usedCount),
+                total: q.maxLimit
+            };
+        });
+    };
+
+    const currentQuotas = getDynamicQuotas();
+    const selectedQuota = currentQuotas.find((q: any) => q.name === selectedQuotaName);
 
     const toggleVoidCheck = (id: number) => {
         setVoidChecklist(voidChecklist.map(item => item.id === id ? { ...item, checked: !item.checked } : item));
@@ -185,7 +305,7 @@ export default function ClaimsPage() {
                 <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                     <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
                         {steps.map((s, i) => (
-                            <React.Fragment key={s.n}>
+                            <React.Fragment key={`step-${s.n}`}>
                                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeStep === s.n ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-100" : activeStep > s.n ? "bg-emerald-500 text-white" : "bg-white border border-gray-200 text-gray-400"}`}>
                                     {activeStep > s.n ? <CheckSquare size={14} /> : s.icon}
                                     <span className="hidden sm:inline">{s.title}</span>
@@ -216,6 +336,7 @@ export default function ClaimsPage() {
                                         />
                                     </div>
                                     <button
+                                        id="search-claim-btn"
                                         onClick={handleSearch}
                                         disabled={loading || searchQuery.length < 5}
                                         className={`px-8 font-black rounded-xl text-sm transition-all shadow-sm ${loading || searchQuery.length < 5 ? 'bg-slate-200 text-slate-400' : 'bg-slate-900 text-white hover:bg-blue-600 hover:shadow-blue-200 hover:shadow-lg'}`}
@@ -246,7 +367,8 @@ export default function ClaimsPage() {
                                                 <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-slate-500 mt-2 bg-white/60 p-2.5 rounded-lg border border-white">
                                                     <p>IMEI: <span className="text-slate-800">{customerData.imei}</span></p>
                                                     <p>บัตรประชาชน: <span className="text-slate-800">{customerData.idCard || "ไม่ระบุ"}</span></p>
-                                                    <p>เลขกรมธรรม์: <span className="text-blue-600 font-bold">{customerData.policyNumber || "รออนุมัติเลข"}</span></p>
+                                                    <p>เลขกรมธรรม์: <span className="text-blue-600 font-bold">{customerData.policyNumber || "รอนำเข้าระบบ"}</span></p>
+                                                    <p>แพ็กเกจ: <span className="text-blue-600 font-bold">{customerData.coveragePlan?.name || "ไม่ทราบชื่อแพ็กเกจ"}</span></p>
                                                 </div>
                                                 <p className="text-xs text-emerald-600 font-bold mt-2 bg-emerald-50 inline-block px-3 py-1 rounded-md border border-emerald-100">
                                                     ✓ ประกันใช้งานปกติ (เริ่มคุ้มครอง: {new Date(customerData.approvedAt || customerData.createdAt).toLocaleDateString("th-TH")})
@@ -260,15 +382,28 @@ export default function ClaimsPage() {
                                             <div className="h-px bg-slate-200 flex-1"></div>
                                         </div>
 
-                                        <div className="grid grid-cols-3 gap-4">
-                                            {quota.map(q => (
-                                                <div key={q.type} className="bg-white p-4 rounded-xl border border-blue-100 text-center shadow-sm hover:shadow-md transition-shadow">
-                                                    <div className="flex justify-center mb-2 text-blue-500">{q.icon}</div>
-                                                    <p className="text-xs font-black text-slate-600 uppercase mb-1">{q.title}</p>
-                                                    <p className="text-2xl font-black text-blue-600">{q.remaining}<span className="text-sm text-slate-300 font-medium">/{q.total}</span></p>
-                                                    <p className="text-[10px] text-slate-400 font-bold mt-1 bg-slate-50 rounded px-2 py-0.5 inline-block">Deduct: {q.deductible}</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {currentQuotas.map((q: any) => (
+                                                <div key={`quota-s1-${q.name}`} className="bg-white p-4 rounded-xl border border-blue-100 text-center shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                                                    {q.remaining === 0 && (
+                                                        <div className="absolute inset-0 bg-slate-100/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+                                                            <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full rotate-[-10deg]">หมดสิทธิ์</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex justify-center mb-2 text-blue-500">
+                                                        <QuotaIcon name={q.icon} />
+                                                    </div>
+                                                    <p className="text-xs font-black text-slate-600 uppercase mb-1">{q.name}</p>
+                                                    <p className={`text-2xl font-black ${q.remaining > 0 ? 'text-blue-600' : 'text-slate-400'}`}>
+                                                        {q.remaining}<span className="text-sm text-slate-300 font-medium">/{q.total}</span>
+                                                    </p>
                                                 </div>
                                             ))}
+                                            {currentQuotas.length === 0 && (
+                                                <div className="col-span-full py-6 text-center text-slate-400 text-xs font-bold border border-dashed border-slate-200 rounded-xl">
+                                                    — ไม่มีข้อมูลโควต้าสำหรับแผนนี้ —
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -288,7 +423,7 @@ export default function ClaimsPage() {
 
                                     <div className="space-y-3">
                                         {voidChecklist.map((c) => (
-                                            <div key={c.id} className={`flex items-start justify-between p-4 border rounded-xl transition-all ${c.checked ? 'bg-blue-50/50 border-blue-200' : 'bg-white border-slate-200 hover:border-blue-300'}`}>
+                                            <div key={`void-${c.id}`} className={`flex items-start justify-between p-4 border rounded-xl transition-all ${c.checked ? 'bg-blue-50/50 border-blue-200' : 'bg-white border-slate-200 hover:border-blue-300'}`}>
                                                 <label className="flex items-start gap-3 cursor-pointer flex-1">
                                                     <input
                                                         type="checkbox"
@@ -356,7 +491,7 @@ export default function ClaimsPage() {
                                         {preRepairImages.length > 0 && (
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                                 {preRepairImages.map((src, idx) => (
-                                                    <div key={idx} className="relative aspect-square rounded-xl border border-slate-200 bg-white overflow-hidden group">
+                                                    <div key={`preimg-${idx}`} className="relative aspect-square rounded-xl border border-slate-200 bg-white overflow-hidden group">
                                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                                         <img src={src} alt="Pre-repair" className="w-full h-full object-cover" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -397,10 +532,38 @@ export default function ClaimsPage() {
                                 <div className="space-y-6">
                                     <div className="space-y-1">
                                         <h3 className="text-xl font-black text-slate-900 border-l-4 border-blue-600 pl-3">การชำระค่าธรรมเนียม (Deductible)</h3>
-                                        <p className="text-sm font-medium text-slate-500 pl-4">ข้อมูลและหลักฐานการชำระเงินของลูกค้า</p>
+                                        <p className="text-sm font-medium text-slate-500 pl-4">เลือกประเภทการเคลมและระบุข้อมูลการชำระเงิน</p>
                                     </div>
 
                                     <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-500 uppercase flex items-center gap-2 tracking-widest">
+                                                <Tag size={14} className="text-blue-600" /> ประเภทสิทธิ์ที่ใช้เคลม
+                                            </label>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {currentQuotas.map((q: any) => (
+                                                    <button
+                                                        key={`quota-s3-${q.name}`}
+                                                        disabled={q.remaining === 0}
+                                                        onClick={() => {
+                                                            setSelectedQuotaName(q.name);
+                                                            setDeductibleItem(`ค่าบริการ${q.name}`);
+                                                        }}
+                                                        className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${selectedQuotaName === q.name ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-100' : q.remaining === 0 ? 'border-slate-100 bg-slate-50 opacity-40 grayscale cursor-not-allowed' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`${selectedQuotaName === q.name ? 'text-blue-600' : 'text-slate-400'}`}>
+                                                                <QuotaIcon name={q.icon} size={16} />
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <p className="text-xs font-black text-slate-800">{q.name}</p>
+                                                                <p className="text-[10px] font-bold text-slate-400">เหลือ {q.remaining}/{q.total} ครั้ง</p>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                         <div className="space-y-2">
                                             <label className="text-xs font-black text-slate-500 uppercase flex items-center gap-2 tracking-widest">
                                                 <FileText size={14} className="text-blue-600" /> ชื่อรายการ / แจกแจงค่าใช้จ่าย
@@ -514,7 +677,7 @@ export default function ClaimsPage() {
 
                                 <div className="space-y-3">
                                     {parts.map((part, idx) => (
-                                        <div key={part.id} className="grid grid-cols-1 md:grid-cols-[2fr_1.2fr_0.7fr_0.9fr_auto] gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all group">
+                                        <div key={`part-${part.id}`} className="grid grid-cols-1 md:grid-cols-[2fr_1.2fr_0.7fr_0.9fr_auto] gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all group">
                                             {/* Part Name */}
                                             <div className="space-y-1">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest md:hidden">ชื่ออะไหล่</label>
@@ -526,7 +689,7 @@ export default function ClaimsPage() {
                                                     className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500 transition-all"
                                                 />
                                                 <datalist id={`parts-list-${part.id}`}>
-                                                    {COMMON_PARTS.map(p => <option key={p} value={p} />)}
+                                                    {COMMON_PARTS.map((p, pIdx) => <option key={`opt-${part.id}-${pIdx}`} value={p} />)}
                                                 </datalist>
                                             </div>
                                             {/* Part Number */}
@@ -603,7 +766,7 @@ export default function ClaimsPage() {
                                         {postRepairImages.length > 0 && (
                                             <div className="grid grid-cols-2 gap-3">
                                                 {postRepairImages.map((src, i) => (
-                                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden group border border-slate-100">
+                                                    <div key={`postimg-${i}`} className="relative aspect-square rounded-xl overflow-hidden group border border-slate-100">
                                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                                         <img src={src} alt="post-repair" className="w-full h-full object-cover" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -667,11 +830,11 @@ export default function ClaimsPage() {
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">โควต้าที่จะถูกตัดออก</p>
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center">
-                                                <Monitor size={20} />
+                                                <QuotaIcon name={selectedQuota?.icon || "Settings"} size={20} />
                                             </div>
                                             <div>
-                                                <p className="font-black text-slate-900">สิทธิ์ซ่อมจอ</p>
-                                                <p className="text-sm text-orange-500 font-black">-1 สิทธิ์ (เหลือ 0/2)</p>
+                                                <p className="font-black text-slate-900">{selectedQuotaName || "—"}</p>
+                                                <p className="text-sm text-orange-500 font-black">-1 สิทธิ์ (เหลือ {Math.max(0, (selectedQuota?.remaining || 1) - 1)}/{selectedQuota?.total || 1})</p>
                                             </div>
                                         </div>
                                     </div>
@@ -763,6 +926,17 @@ export default function ClaimsPage() {
                             <div className="flex items-center gap-3">
                                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest hidden md:inline">Step {activeStep} of 6</span>
 
+                                {/* Save Draft Button */}
+                                {customerData && activeStep < 6 && (
+                                    <button
+                                        onClick={handleSaveDraft}
+                                        disabled={saving}
+                                        className="px-4 py-3 font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700 rounded-xl text-sm transition-all hidden sm:block border border-amber-200"
+                                    >
+                                        {saving ? "กำลังบันทึก..." : "📥 บันทึกฉบับร่าง"}
+                                    </button>
+                                )}
+
                                 {/* Step 6: trigger claim confirmation */}
                                 {activeStep === 6 ? (
                                     <button
@@ -798,6 +972,69 @@ export default function ClaimsPage() {
                     >
                         <Plus size={18} /> เปิดเคสเคลมใหม่
                     </button>
+                </div>
+            )}
+
+            {/* Notification Toast */}
+            {notification && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-5 duration-300">
+                    <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border ${notification.type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white' : notification.type === 'error' ? 'bg-red-600 border-red-500 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
+                        {notification.type === 'success' ? <CheckSquare size={20} /> : <AlertCircle size={20} />}
+                        <span className="font-bold text-sm">{notification.msg}</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Confirm Modal */}
+            {confirmModal?.show && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center animate-in zoom-in-95 duration-200">
+                        <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <ClipboardList size={40} />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 mb-2">พบรายการที่เคยบันทึกไว้</h3>
+                        <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
+                            เราพบรายการแจ้งเคลมเดิมของลูกค้ารายนี้ <br />
+                            ค้างอยู่ที่ขั้นตอนที่ <span className="text-blue-600 font-bold">{confirmModal.draft.currentStep || 1}</span> จาก 6 <br />
+                            คุณต้องการทำต่อจากเดิมหรือไม่?
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    const draft = confirmModal.draft;
+                                    setCurrentClaimId(draft._id);
+                                    setActiveStep(draft.currentStep || 1);
+                                    setVoidChecklist(draft.voidChecklist || voidChecklist);
+                                    setPreRepairNote(draft.preRepairNote || "");
+                                    setPreRepairImages(draft.preRepairImages || []);
+                                    setDeductibleItem(draft.deductibleItem || "");
+                                    setDeductibleDetail(draft.deductibleDetail || "");
+                                    setDeductibleAmount(draft.deductibleAmount?.toString() || "");
+                                    setPaymentSlip(draft.paymentSlip || null);
+                                    if (draft.parts?.length > 0) setParts(draft.parts);
+                                    setPostRepairImages(draft.postRepairImages || []);
+                                    setPostRepairNote(draft.postRepairNote || "");
+                                    setSelectedQuotaName(draft.consumedQuotaName || "");
+                                    setConfirmModal(null);
+                                }}
+                                className="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+                            >
+                                ทำต่อรายการเดิม
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (customerData.coveragePlan?.quotas?.length > 0) {
+                                        setSelectedQuotaName(customerData.coveragePlan.quotas[0].name);
+                                        setDeductibleItem(`ค่าบริการ${customerData.coveragePlan.quotas[0].name}`);
+                                    }
+                                    setConfirmModal(null);
+                                }}
+                                className="flex-1 bg-slate-100 text-slate-600 font-black py-4 rounded-2xl hover:bg-slate-200 transition-all"
+                            >
+                                เริ่มใหม่
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

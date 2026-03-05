@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, ShieldCheck, Trash2, ListChecks, Save } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Trash2, ListChecks, Save, Activity } from "lucide-react";
 import Link from "next/link";
 
 export default function EditCoveragePlan() {
@@ -19,6 +19,7 @@ export default function EditCoveragePlan() {
         durationUnit: "",
         priceMultiplier: 0.05,
         highlights: [""],
+        quotas: [] as { name: string, maxLimit: number, icon: string }[],
         order: 0,
         isActive: true,
         deviceType: "Smartphone"
@@ -27,11 +28,16 @@ export default function EditCoveragePlan() {
     useEffect(() => {
         const fetchPlan = async () => {
             try {
-                const res = await fetch(`/api/coverage-plans`);
+                const res = await fetch(`/api/coverage-plans/${id}`);
                 const data = await res.json();
-                const plan = data.find((p: any) => p._id === id);
-                if (plan) {
-                    setForm(plan);
+
+                if (data && !data.error) {
+                    setForm(prev => ({
+                        ...prev,
+                        ...data,
+                        highlights: data.highlights || [""],
+                        quotas: data.quotas || []
+                    }));
                 } else {
                     router.push("/admin/coverage-plans");
                 }
@@ -49,14 +55,20 @@ export default function EditCoveragePlan() {
         e.preventDefault();
         setSaving(true);
         try {
+            // Strip internal fields before sending to API
+            const { _id, createdAt, updatedAt, __v, ...saveData } = form as any;
+
             const res = await fetch(`/api/coverage-plans/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form)
+                body: JSON.stringify(saveData)
             });
             if (res.ok) {
+                alert("บันทึกข้อมูลเรียบร้อยแล้ว");
                 router.push("/admin/coverage-plans");
-                router.refresh();
+            } else {
+                const err = await res.json();
+                alert("Error saving: " + err.error);
             }
         } catch (error) {
             console.error(error);
@@ -71,6 +83,14 @@ export default function EditCoveragePlan() {
         const updated = [...form.highlights];
         updated[index] = value;
         setForm({ ...form, highlights: updated });
+    };
+
+    const addQuota = () => setForm({ ...form, quotas: [...(form.quotas || []), { name: "", maxLimit: 1, icon: "Settings" }] });
+    const removeQuota = (index: number) => setForm({ ...form, quotas: (form.quotas || []).filter((_, i) => i !== index) });
+    const updateQuota = (index: number, field: string, value: string | number) => {
+        const updated = [...(form.quotas || [])];
+        (updated[index] as any)[field] = value;
+        setForm({ ...form, quotas: updated });
     };
 
     if (loading) return (
@@ -106,7 +126,7 @@ export default function EditCoveragePlan() {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="bg-white rounded-[2.5rem] p-10 shadow-2xl shadow-slate-200/50 border border-slate-100">
+            <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-10 shadow-2xl shadow-slate-200/50 border border-slate-100">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Basic Info */}
                     <div className="col-span-2 space-y-1.5">
@@ -220,6 +240,59 @@ export default function EditCoveragePlan() {
                         >
                             <Plus size={16} /> เพิ่มรายการสิทธิประโยชน์
                         </button>
+                    </div>
+
+                    {/* Quotas Section */}
+                    <div className="col-span-2 space-y-4 pt-4 border-t border-slate-50">
+                        <label className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Activity size={18} className="text-blue-500" /> โควต้าการเคลม (แยกประเภท)
+                        </label>
+                        <div className="grid grid-cols-1 gap-4">
+                            {(form.quotas || []).map((q, i) => (
+                                <div key={i} className="flex gap-4 items-end bg-slate-50 p-4 rounded-3xl border border-slate-100 flex-wrap md:flex-nowrap">
+                                    <div className="flex-1 space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-400">ชื่อประเภท (เช่น จอแตก)</label>
+                                        <input
+                                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-400"
+                                            value={q.name} onChange={e => updateQuota(i, 'name', e.target.value)} required
+                                        />
+                                    </div>
+                                    <div className="w-24 shrink-0 space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-400">จำนวนครั้ง</label>
+                                        <input
+                                            type="number" min="1"
+                                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-400"
+                                            value={q.maxLimit} onChange={e => updateQuota(i, 'maxLimit', Number(e.target.value))} required
+                                        />
+                                    </div>
+                                    <div className="w-40 shrink-0 space-y-1">
+                                        <label className="text-[10px] uppercase font-bold text-slate-400">ไอคอน (Lucide)</label>
+                                        <select
+                                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-400"
+                                            value={q.icon} onChange={e => updateQuota(i, 'icon', e.target.value)}
+                                        >
+                                            <option value="Monitor">จอแตก (Monitor)</option>
+                                            <option value="Droplets">น้ำเข้า (Droplets)</option>
+                                            <option value="Battery">แบตเตอรี่ (Battery)</option>
+                                            <option value="Cpu">เมนบอร์ด (Cpu)</option>
+                                            <option value="Settings">ตั้งค่า (Settings)</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        type="button" onClick={() => removeQuota(i)}
+                                        className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button" onClick={addQuota}
+                                className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-sm font-black text-slate-400 uppercase tracking-widest hover:border-blue-400 hover:text-blue-500 transition-all flex items-center justify-center gap-2"
+                            >
+                                + เพิ่มโควต้าการเคลม
+                            </button>
+                        </div>
                     </div>
 
                     {/* Submit Section */}

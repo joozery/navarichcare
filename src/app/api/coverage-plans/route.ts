@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"; // Re-sync schema
 import dbConnect from "@/lib/mongodb";
 import CoveragePlan from "@/models/CoveragePlan";
 

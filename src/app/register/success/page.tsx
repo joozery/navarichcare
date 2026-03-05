@@ -120,10 +120,10 @@ export default function SuccessPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4">
                 {/* LINE Admin */}
                 <a
-                    href="https://line.me/ti/p/@naravichcare"
+                    href="https://lin.ee/FtT3pJR"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] flex flex-col items-center gap-4 hover:border-green-400 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
+                    className="group bg-white border-2 border-slate-100 p-8 rounded-3xl flex flex-col items-center gap-4 hover:border-green-400 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
                 >
                     <div className="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center group-hover:bg-green-100 transition-colors">
                         <MessageCircle size={48} className="text-green-500" />
@@ -139,16 +139,16 @@ export default function SuccessPage() {
 
                 {/* Facebook Admin */}
                 <a
-                    href="https://m.me/naravichcare"
+                    href="https://www.facebook.com/profile.php?id=100093365198954"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] flex flex-col items-center gap-4 hover:border-blue-400 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
+                    className="group bg-white border-2 border-slate-100 p-8 rounded-3xl flex flex-col items-center gap-4 hover:border-blue-400 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
                 >
                     <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                         <Facebook size={48} className="text-blue-600" />
                     </div>
                     <div className="text-center">
-                        <h4 className="text-2xl font-black text-slate-800">แจ้งแอดมินทาง FB</h4>
+                        <h4 className="text-2xl font-black text-slate-800">แจ้งแอดมินทาง Facebook</h4>
                         <p className="text-slate-400 font-bold">Naravich Care Official</p>
                     </div>
                     <div className="w-full py-3 bg-blue-600 text-white rounded-2xl font-black flex items-center justify-center gap-2 group-hover:bg-blue-700 transition-colors">

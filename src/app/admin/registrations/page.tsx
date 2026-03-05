@@ -148,10 +148,12 @@ export default function AdminRegistrations() {
                             <h1 className="text-2xl font-black text-white tracking-tight">NARAVICH CARE</h1>
                             <div className="text-[11px] text-blue-400 font-semibold tracking-widest mt-0.5">MOBILE PROTECTION POLICY</div>
                         </div>
-                        <div className="text-right">
-                            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">เลขกรมธรรม์</div>
-                            <div className="text-lg font-black text-white font-mono tracking-widest">{selected.policyNumber || policyNumber || "—"}</div>
-                            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 rounded text-emerald-400 text-xs font-bold">
+                        <div className="text-right space-y-2">
+                            <div>
+                                <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">เลขอ้างอิง</div>
+                                <div className="text-lg font-black text-white font-mono tracking-widest">#{selected._id.toString().slice(-6).toUpperCase()}</div>
+                            </div>
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 rounded text-emerald-400 text-xs font-bold">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> อนุมัติแล้ว
                             </div>
                         </div>
@@ -385,16 +387,17 @@ export default function AdminRegistrations() {
                                                         >
                                                             ดูกรมธรรม์ <FileText size={13} />
                                                         </button>
-                                                    ) : r.status === "paid" || r.paymentReceipt ? (
+                                                    ) : null}
+                                                    {(r.status === "paid" || (r.status === "approved" && r.paymentReceipt) || r.paymentReceipt) ? (
                                                         <button
                                                             onClick={() => { setSelected(r); setShowTransaction(true); }}
                                                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shadow-sm"
                                                         >
-                                                            ดูหลักฐาน <CreditCard size={13} />
+                                                            ดูสลิป <CreditCard size={13} />
                                                         </button>
-                                                    ) : (
-                                                        <div className="px-3 py-1.5 text-xs font-medium text-gray-300 italic">รอการชำระ</div>
-                                                    )}
+                                                    ) : r.status === "pending" ? (
+                                                        <div className="px-3 py-1.5 text-xs font-medium text-amber-400 italic">รอชำระ</div>
+                                                    ) : null}
                                                 </div>
                                             </td>
                                         </tr>
@@ -499,6 +502,30 @@ export default function AdminRegistrations() {
                                                 <div className="p-8 bg-gray-50 rounded-lg text-center text-sm text-gray-400 border border-dashed border-gray-200">ไม่มีรูปใบเสร็จ</div>
                                             )}
                                         </div>
+
+                                        {/* Payment Receipt Slip Section */}
+                                        {(selected.paymentReceipt || selected.status === "paid" || selected.status === "approved") && (
+                                            <div className="space-y-3">
+                                                <h4 className="text-xs font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-2">
+                                                    <CreditCard size={13} /> สลิปโอนเงิน (ชำระแล้ว)
+                                                </h4>
+                                                {selected.paymentReceipt ? (
+                                                    <div className="bg-blue-50 rounded-md overflow-hidden border border-blue-100 p-3 flex items-center justify-center">
+                                                        <img
+                                                            src={selected.paymentReceipt}
+                                                            alt="payment-slip"
+                                                            className="max-h-64 w-full object-contain rounded-md cursor-pointer"
+                                                            onClick={() => setShowTransaction(true)}
+                                                            title="คลิกเพื่อดูแบบเต็ม"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="p-6 bg-blue-50/50 rounded-lg border border-dashed border-blue-200 text-center text-sm text-blue-400">
+                                                        สถานะ: <span className="font-bold">ชำระแล้ว</span> — รอแอดมินอัปโหลดสลิป
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Right: Actions */}

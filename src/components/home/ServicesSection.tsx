@@ -16,7 +16,7 @@ function MobileCareLogoBig() {
                 <ShieldCheck size={30} />
             </div>
             <div className="leading-none">
-                <p className="text-[11px] font-semibold opacity-70">True</p>
+                <p className="text-[11px] font-semibold opacity-70">Naravich</p>
                 <p className="text-2xl font-black leading-tight">Mobile</p>
                 <p className="text-2xl font-black leading-tight">Care</p>
                 <p className="text-[11px] font-semibold opacity-60 mt-1">บริการดูแลมือถือครบวงจร</p>
@@ -45,7 +45,7 @@ export function ServicesSection() {
                 {/* Cards */}
                 <div className="grid md:grid-cols-2 gap-6">
 
-                    {/* Card 1 — True + Apple Care */}
+                    {/* Card 1 — Naravich + Apple Care */}
                     <div className="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-3xl p-10 border border-pink-100 shadow-sm flex flex-col justify-between min-h-[260px]">
                         <div className="flex items-center gap-6">
                             <MobileCareLogoBig />
@@ -61,7 +61,7 @@ export function ServicesSection() {
                         </div>
 
                         <p className="text-base font-bold text-gray-700 mt-8">
-                            True Mobile Care | Apple Care Service
+                            Naravich Mobile Care | Apple Care Service
                         </p>
                     </div>
 
