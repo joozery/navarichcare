@@ -45,6 +45,7 @@ const navGroups: NavGroup[] = [
         group: "เนื้อหาเว็บไซต์",
         items: [
             { title: "เงื่อนไข & ข้อตกลง", icon: <FileText size={18} />, href: "/admin/terms" },
+            { title: "ตารางคำขอรับบริการ", icon: <History size={18} />, href: "/admin/service-request" },
         ],
     },
 ];
