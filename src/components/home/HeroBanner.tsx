@@ -1,15 +1,56 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { ShieldCheck } from "lucide-react";
 
+interface HeroBannerData {
+    badge1Label: string;
+    badge1Title: string;
+    badge1Subtitle: string;
+    badge2Eyebrow: string;
+    badge2Title: string;
+    heading1: string;
+    heading2: string;
+    pillText: string;
+    subText: string;
+    priceMonthly: string;
+    priceMonthlyUnit: string;
+    priceYearly: string;
+    priceYearlyUnit: string;
+}
+
+const DEFAULT: HeroBannerData = {
+    badge1Label: "NARAVICH",
+    badge1Title: "Mobile Care",
+    badge1Subtitle: "บริการดูแลมือถือครบวงจร",
+    badge2Eyebrow: "มั่นใจด้วยมาตรฐาน",
+    badge2Title: "ระดับโลก",
+    heading1: "มั่นใจด้วยมาตรฐาน",
+    heading2: "ระดับโลก",
+    pillText: "คุ้มครองอุบัติเหตุไม่จำกัดครั้ง คุ้มครองทั้งภายในและภายนอก",
+    subText: "รับบริการที่ Apple Store และ Apple Service Provider ทั่วโลก",
+    priceMonthly: "179.-",
+    priceMonthlyUnit: "/เดือน*",
+    priceYearly: "1,990.-",
+    priceYearlyUnit: "/ปี*",
+};
+
 export function HeroBanner() {
+    const [d, setD] = useState<HeroBannerData>(DEFAULT);
+
+    useEffect(() => {
+        fetch("/api/admin/hero-banner")
+            .then(r => r.json())
+            .then(res => { if (res.success) setD({ ...DEFAULT, ...res.data }); })
+            .catch(() => {});
+    }, []);
+
     return (
         <section className="relative bg-white overflow-hidden">
             <div className="flex flex-col lg:flex-row min-h-[420px]">
 
-                {/* LEFT: Image — ชิดซ้ายสุด */}
+                {/* LEFT: Image */}
                 <div className="relative w-full lg:w-1/2 min-h-[300px] lg:min-h-[420px]">
                     <Image
                         src="/iphone/iphone.jpg"
@@ -33,9 +74,9 @@ export function HeroBanner() {
                                     <ShieldCheck size={22} />
                                 </div>
                                 <div>
-                                    <p className="text-[9px] font-black text-purple-600 uppercase tracking-[0.15em] leading-none mb-1">NARAVICH</p>
-                                    <p className="text-base font-black text-gray-900 leading-tight">Mobile Care</p>
-                                    <p className="text-[9px] text-purple-400 font-semibold mt-0.5">บริการดูแลมือถือครบวงจร</p>
+                                    <p className="text-[9px] font-black text-purple-600 uppercase tracking-[0.15em] leading-none mb-1">{d.badge1Label}</p>
+                                    <p className="text-base font-black text-gray-900 leading-tight">{d.badge1Title}</p>
+                                    <p className="text-[9px] text-purple-400 font-semibold mt-0.5">{d.badge1Subtitle}</p>
                                 </div>
                             </div>
 
@@ -47,52 +88,46 @@ export function HeroBanner() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-[9px] text-gray-400 font-semibold leading-none mb-1">มั่นใจด้วยมาตรฐาน</p>
-                                    <p className="text-base font-black text-gray-900 leading-tight">ระดับโลก</p>
+                                    <p className="text-[9px] text-gray-400 font-semibold leading-none mb-1">{d.badge2Eyebrow}</p>
+                                    <p className="text-base font-black text-gray-900 leading-tight">{d.badge2Title}</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Main Heading */}
                         <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-5 leading-[1.15]">
-                            มั่นใจด้วยมาตรฐาน<br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">ระดับโลก</span>
+                            {d.heading1}<br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">{d.heading2}</span>
                         </h1>
 
                         {/* Protection Pill */}
                         <div className="bg-gradient-to-r from-cyan-400 to-purple-600 text-white rounded-full px-6 py-2.5 font-bold text-sm inline-block mb-3 shadow-lg shadow-purple-100">
-                            คุ้มครองอุบัติเหตุไม่จำกัดครั้ง คุ้มครองทั้งภายในและภายนอก
+                            {d.pillText}
                         </div>
 
-                        <p className="text-sm font-semibold text-gray-500 mb-6">
-                            รับบริการที่ <span className="text-gray-900 font-bold">Apple Store</span> และ{" "}
-                            <span className="text-gray-900 font-bold">Apple Service Provider</span> ทั่วโลก
-                        </p>
+                        <p className="text-sm font-semibold text-gray-500 mb-6">{d.subText}</p>
 
-                        {/* Price Cards — single container, divider in middle */}
+                        {/* Price Cards */}
                         <div className="flex bg-white rounded-2xl border border-pink-200 overflow-hidden shadow-md">
-                            {/* Left */}
                             <div className="flex-1 px-6 py-5">
                                 <p className="text-xs font-semibold text-gray-500 mb-1">เริ่มเพียง</p>
                                 <div className="flex items-baseline gap-0.5">
                                     <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
-                                        179.-
+                                        {d.priceMonthly}
                                     </span>
-                                    <span className="text-xs font-bold text-gray-400 ml-1">/เดือน*</span>
+                                    <span className="text-xs font-bold text-gray-400 ml-1">{d.priceMonthlyUnit}</span>
                                 </div>
                             </div>
 
-                            {/* Divider */}
                             <div className="w-px bg-gradient-to-b from-pink-300 to-purple-400 my-3" />
 
-                            {/* Right */}
                             <div className="flex-1 px-6 py-5">
                                 <p className="text-xs font-semibold text-gray-500 mb-1">เริ่มเพียง</p>
                                 <div className="flex items-baseline gap-0.5">
                                     <span className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
-                                        1,990.-
+                                        {d.priceYearly}
                                     </span>
-                                    <span className="text-xs font-bold text-gray-400 ml-1">/ปี*</span>
+                                    <span className="text-xs font-bold text-gray-400 ml-1">{d.priceYearlyUnit}</span>
                                 </div>
                             </div>
                         </div>

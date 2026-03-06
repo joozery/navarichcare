@@ -7,7 +7,7 @@ import {
     LayoutDashboard, Smartphone, ShieldCheck, Users,
     ClipboardList, FileText, LogOut, TrendingDown, Percent,
     UserCog, UserCircle, ChevronDown, Settings, Bell, Zap,
-    Circle, ChevronsLeft, ChevronsRight, History,
+    Circle, ChevronsLeft, ChevronsRight, History, LayoutTemplate, MessageCircle, Shield,
 } from "lucide-react";
 
 type NavItem = { title: string; icon: React.ReactNode; href: string; badge?: string | number };
@@ -44,6 +44,10 @@ const navGroups: NavGroup[] = [
     {
         group: "เนื้อหาเว็บไซต์",
         items: [
+            { title: "Hero Banner", icon: <LayoutTemplate size={18} />, href: "/admin/hero-banner" },
+            { title: "Footer", icon: <LayoutTemplate size={18} />, href: "/admin/footer" },
+            { title: "Floating Chat", icon: <MessageCircle size={18} />, href: "/admin/floating-chat" },
+            { title: "นโยบาย & เงื่อนไข", icon: <Shield size={18} />, href: "/admin/legal-pages" },
             { title: "เงื่อนไข & ข้อตกลง", icon: <FileText size={18} />, href: "/admin/terms" },
             { title: "ตารางคำขอรับบริการ", icon: <History size={18} />, href: "/admin/service-request" },
         ],

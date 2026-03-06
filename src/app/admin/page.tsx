@@ -33,17 +33,23 @@ export default function AdminDashboard() {
         );
     }
 
-    const { stats, agentPerformance, recentClaims } = dashboardData || {
-        stats: { netProfit: "฿0", totalCollected: "฿0", nplValue: "฿0", activeLoansCount: 0 },
-        agentPerformance: [],
-        recentClaims: []
+    const { stats = {}, agentPerformance = [], recentClaims = [], monthlyRevenue } = dashboardData || {};
+    const safeStats = {
+        netProfit: stats.netProfit ?? "฿0",
+        totalCollected: stats.totalCollected ?? "฿0",
+        nplValue: stats.nplValue ?? "฿0",
+        activeLoansCount: stats.activeLoansCount ?? 0,
+        regApproved: stats.regApproved ?? 0,
     };
+    const chartHeights = Array.isArray(monthlyRevenue) && monthlyRevenue.length === 12
+        ? monthlyRevenue
+        : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     const kpiStats = [
-        { label: "กำไรสุทธิจริง", value: stats.netProfit, delta: "+0%", up: true, icon: <Activity size={18} />, color: "text-emerald-500", bg: "bg-emerald-500/10", description: "กำไรหลังหักต้นทุนประมาณการ" },
-        { label: "ยอดรับชำระสะสม", value: stats.totalCollected, delta: "+0%", up: true, icon: <CreditCard size={18} />, color: "text-blue-500", bg: "bg-blue-500/10", description: "ยอดรวมเงินต้น + ดอกเบี้ยที่เก็บได้" },
-        { label: "พอร์ตสินเชื่อปกติ", value: stats.activeLoansCount, delta: "Active", up: true, icon: <Smartphone size={18} />, color: "text-indigo-500", bg: "bg-indigo-500/10", description: "จำนวนสัญญาที่ยังไม่ปิด" },
-        { label: "หนี้ค้างชำระ (NPL)", value: stats.nplValue, delta: "0%", up: false, icon: <TrendingDown size={18} />, color: "text-red-500", bg: "bg-red-500/10", description: "รวมยอดค้างชำระสถานะ Warning/Critical" }
+        { label: "กำไรสุทธิจริง", value: safeStats.netProfit, delta: "+0%", up: true, icon: <Activity size={18} />, color: "text-emerald-500", bg: "bg-emerald-500/10", description: "กำไรหลังหักต้นทุนประมาณการ" },
+        { label: "ยอดรับชำระสะสม", value: safeStats.totalCollected, delta: "+0%", up: true, icon: <CreditCard size={18} />, color: "text-blue-500", bg: "bg-blue-500/10", description: "ยอดรวมจากชำระเงิน + สมัครที่อนุมัติ" },
+        { label: "พอร์ตสินเชื่อปกติ", value: safeStats.activeLoansCount > 0 ? safeStats.activeLoansCount : safeStats.regApproved, delta: "Active", up: true, icon: <Smartphone size={18} />, color: "text-indigo-500", bg: "bg-indigo-500/10", description: safeStats.activeLoansCount > 0 ? "จำนวนสัญญาที่ยังไม่ปิด" : "จำนวนสมัครที่อนุมัติ" },
+        { label: "หนี้ค้างชำระ (NPL)", value: safeStats.nplValue, delta: "0%", up: false, icon: <TrendingDown size={18} />, color: "text-red-500", bg: "bg-red-500/10", description: "รวมยอดค้างชำระสถานะ Warning/Critical" }
     ];
 
     return (
@@ -102,10 +108,10 @@ export default function AdminDashboard() {
                             </div>
                         </div>
                         <div className="h-72 flex items-stretch justify-between gap-2 md:gap-4 mt-12 bg-slate-50/50 rounded-2xl p-6 border border-slate-100/50">
-                            {[45, 60, 40, 80, 55, 90, 75, 85, 65, 95, 80, 70].map((h, i) => (
+                            {chartHeights.map((h, i) => (
                                 <div key={i} className="flex-1 flex flex-col group/bar cursor-pointer relative">
                                     <div className="flex-1 flex flex-col justify-end">
-                                        <div className="w-full bg-slate-200 rounded-t-lg transition-all duration-700 group-hover/bar:bg-blue-600 group-hover/bar:shadow-[0_-4px_12px_rgba(37,99,235,0.3)]" style={{ height: `${h}%` }}></div>
+                                        <div className="w-full bg-slate-200 rounded-t-lg transition-all duration-700 group-hover/bar:bg-blue-600 group-hover/bar:shadow-[0_-4px_12px_rgba(37,99,235,0.3)]" style={{ height: `${Math.max(h, 4)}%` }}></div>
                                     </div>
                                     <div className="mt-4 flex flex-col items-center">
                                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">

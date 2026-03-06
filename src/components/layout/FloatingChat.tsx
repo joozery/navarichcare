@@ -1,35 +1,58 @@
 "use client";
 
-import React, { useState } from "react";
-import { MessageCircle, X, Phone, Mail, MessageSquare, Facebook, ChevronRight } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { MessageCircle, X, Phone, MessageSquare, Facebook, ChevronRight, Mail } from "lucide-react";
 import Image from "next/image";
+
+type IconType = "facebook" | "line" | "phone" | "email";
+
+interface ContactMethod {
+    iconType: IconType;
+    label: string;
+    desc: string;
+    href: string;
+    isActive: boolean;
+}
+
+interface FloatingChatData {
+    brandName: string;
+    greetingText: string;
+    footerText: string;
+    contacts: ContactMethod[];
+}
+
+const DEFAULT: FloatingChatData = {
+    brandName: "NaravichCare",
+    greetingText: "สวัสดีค่ะ! ยินดีต้อนรับสู่ NaravichCare\nต้องการสอบถามบริการไหน เลือกได้เลยค่ะ",
+    footerText: "Official Support Channel • Mon-Sun 09:00-18:00",
+    contacts: [
+        { iconType: "facebook", label: "Chat with us", desc: "Facebook Messenger", href: "https://m.me/naravichcare", isActive: true },
+        { iconType: "line", label: "Add friend", desc: "@naravichcare", href: "https://line.me/ti/p/naravichcare", isActive: true },
+        { iconType: "phone", label: "Call Support", desc: "02-XXX-XXXX", href: "tel:+66XXXXXXXXX", isActive: true },
+    ],
+};
+
+function ContactIcon({ type }: { type: IconType }) {
+    if (type === "facebook") return <Facebook size={18} className="text-[#0084FF]" />;
+    if (type === "line") return <MessageSquare size={18} className="text-[#06C755]" />;
+    if (type === "email") return <Mail size={18} className="text-orange-500" />;
+    return <Phone size={18} className="text-blue-600" />;
+}
 
 export function FloatingChat() {
     const [isOpen, setIsOpen] = useState(false);
+    const [d, setD] = useState<FloatingChatData>(DEFAULT);
 
-    const contactMethods = [
-        {
-            name: "Facebook Messenger",
-            icon: <Facebook size={18} className="text-[#0084FF]" />,
-            label: "Chat with us",
-            desc: "Facebook Messenger",
-            href: "https://m.me/naravichcare",
-        },
-        {
-            name: "LINE Official",
-            icon: <MessageSquare size={18} className="text-[#06C755]" />,
-            label: "Add friend",
-            desc: "@naravichcare",
-            href: "https://line.me/ti/p/naravichcare",
-        },
-        {
-            name: "Hotline Phone",
-            icon: <Phone size={18} className="text-blue-600" />,
-            label: "Call Support",
-            desc: "02-XXX-XXXX",
-            href: "tel:+66XXXXXXXXX",
-        },
-    ];
+    useEffect(() => {
+        fetch("/api/admin/floating-chat")
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) setD({ ...DEFAULT, ...res.data, contacts: res.data.contacts ?? DEFAULT.contacts });
+            })
+            .catch(() => {});
+    }, []);
+
+    const activeContacts = d.contacts.filter(c => c.isActive);
 
     return (
         <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
@@ -58,24 +81,23 @@ export function FloatingChat() {
                                 />
                             </div>
                             <div>
-                                <h3 className="font-black text-xl leading-tight">NaravichCare</h3>
+                                <h3 className="font-black text-xl leading-tight">{d.brandName}</h3>
                                 <div className="flex items-center gap-1.5 mt-1">
                                     <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
                                     <span className="text-xs font-semibold text-blue-100 opacity-80 uppercase tracking-wider">Online Now</span>
                                 </div>
                             </div>
                         </div>
-                        <p className="text-sm text-blue-50/70 font-medium leading-relaxed">
-                            สวัสดีค่ะ! ยินดีต้อนรับสู่ NaravichCare <br />
-                            ต้องการสอบถามบริการไหน เลือกได้เลยค่ะ
+                        <p className="text-sm text-blue-50/70 font-medium leading-relaxed whitespace-pre-line">
+                            {d.greetingText}
                         </p>
                     </div>
 
                     {/* Contact List */}
                     <div className="p-6 space-y-3 bg-gray-50/50">
-                        {contactMethods.map((method, index) => (
+                        {activeContacts.map((method, index) => (
                             <a
-                                key={method.name}
+                                key={index}
                                 href={method.href}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -86,7 +108,7 @@ export function FloatingChat() {
                                 }}
                             >
                                 <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center transition-colors group-hover:bg-blue-50">
-                                    {method.icon}
+                                    <ContactIcon type={method.iconType} />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tight">{method.desc}</p>
@@ -99,9 +121,7 @@ export function FloatingChat() {
 
                     {/* Footer */}
                     <div className="px-8 py-5 bg-white text-center border-t border-gray-50">
-                        <p className="text-[11px] text-gray-400 font-medium">
-                            Official Support Channel • Mon-Sun 09:00-18:00
-                        </p>
+                        <p className="text-[11px] text-gray-400 font-medium">{d.footerText}</p>
                     </div>
                 </div>
             )}

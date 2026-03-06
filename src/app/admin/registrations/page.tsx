@@ -4,7 +4,8 @@ import {
     CheckCircle, XCircle, Clock,
     FileText, CreditCard, Search,
     Smartphone, ArrowUpRight,
-    Upload, Printer, Download, Shield
+    Upload, Printer, Download, Shield,
+    Trash2
 } from "lucide-react";
 
 type Registration = {
@@ -50,7 +51,94 @@ export default function AdminRegistrations() {
     const [actionLoading, setActionLoading] = useState(false);
     const [showCertificate, setShowCertificate] = useState(false);
     const [showTransaction, setShowTransaction] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: "bulk"; count: number; error?: string } | { type: "one"; reg: Registration; error?: string } | null>(null);
     const certRef = useRef<HTMLDivElement>(null);
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === filtered.length) setSelectedIds(new Set());
+        else setSelectedIds(new Set(filtered.map(r => r._id)));
+    };
+
+    const openDeleteBulkConfirm = () => {
+        if (selectedIds.size > 0) setDeleteConfirm({ type: "bulk", count: selectedIds.size });
+    };
+
+    const openDeleteOneConfirm = (r: Registration) => {
+        setDeleteConfirm({ type: "one", reg: r });
+    };
+
+    const executeDeleteBulk = async () => {
+        if (selectedIds.size === 0) return;
+        setDeleteLoading(true);
+        try {
+            const res = await fetch("/api/admin/registrations", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids: Array.from(selectedIds) }),
+            });
+            if (res.ok) {
+                setSelectedIds(new Set());
+                if (selected && selectedIds.has(selected._id)) setSelected(null);
+                setDeleteConfirm(null);
+                fetchAll();
+            } else setDeleteConfirm(prev => (prev ? { ...prev, error: "ลบไม่สำเร็จ" } : null));
+        } catch (e) {
+            console.error(e);
+            setDeleteConfirm(prev => (prev ? { ...prev, error: "เกิดข้อผิดพลาด" } : null));
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
+    const executeDeleteOne = async () => {
+        if (!deleteConfirm || deleteConfirm.type !== "one") return;
+        const r = deleteConfirm.reg;
+        setDeleteLoading(true);
+        try {
+            const res = await fetch(`/api/admin/registrations/${r._id}`, { method: "DELETE" });
+            if (res.ok) {
+                setSelectedIds(prev => { const next = new Set(prev); next.delete(r._id); return next; });
+                if (selected?._id === r._id) setSelected(null);
+                setDeleteConfirm(null);
+                fetchAll();
+            } else setDeleteConfirm(prev => (prev ? { ...prev, error: "ลบไม่สำเร็จ" } : null));
+        } catch (e) {
+            console.error(e);
+            setDeleteConfirm(prev => (prev ? { ...prev, error: "เกิดข้อผิดพลาด" } : null));
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
+    const loadAndSelect = async (r: Registration, onLoaded?: (full: Registration) => void) => {
+        setDetailLoading(true);
+        try {
+            const res = await fetch(`/api/admin/registrations/${r._id}`);
+            const json = await res.json();
+            if (json.data) {
+                setSelected(json.data);
+                setPolicyNumber(json.data.policyNumber || "");
+                setReceiptFile(null);
+                onLoaded?.(json.data);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setDetailLoading(false);
+        }
+    };
 
     const fetchAll = async () => {
         try {
@@ -318,6 +406,15 @@ export default function AdminRegistrations() {
                                 onChange={e => setSearch(e.target.value)}
                             />
                         </div>
+                        {selectedIds.size > 0 && (
+                            <button
+                                onClick={openDeleteBulkConfirm}
+                                disabled={deleteLoading}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all disabled:opacity-50"
+                            >
+                                <Trash2 size={16} /> ลบที่เลือก ({selectedIds.size})
+                            </button>
+                        )}
                     </div>
 
                     {/* Table */}
@@ -325,6 +422,14 @@ export default function AdminRegistrations() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-gray-50 border-b border-gray-200">
+                                    <th className="w-10 px-4 py-3.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                                            onChange={toggleSelectAll}
+                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                    </th>
                                     <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider w-8">#</th>
                                     <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">ผู้สมัคร</th>
                                     <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">อุปกรณ์</th>
@@ -336,13 +441,22 @@ export default function AdminRegistrations() {
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {loading ? (
-                                    <tr><td colSpan={7} className="py-20 text-center text-sm text-gray-400">กำลังโหลดข้อมูล...</td></tr>
+                                    <tr><td colSpan={8} className="py-20 text-center text-sm text-gray-400">กำลังโหลดข้อมูล...</td></tr>
                                 ) : filtered.length === 0 ? (
-                                    <tr><td colSpan={7} className="py-20 text-center text-sm text-gray-400">ไม่พบรายการข้อมูล</td></tr>
+                                    <tr><td colSpan={8} className="py-20 text-center text-sm text-gray-400">ไม่พบรายการข้อมูล</td></tr>
                                 ) : filtered.map((r, idx) => {
                                     const cfg = STATUS_CONFIG[r.status];
+                                    const checked = selectedIds.has(r._id);
                                     return (
-                                        <tr key={r._id} className="hover:bg-gray-50/70 transition-colors">
+                                        <tr key={r._id} className={`hover:bg-gray-50/70 transition-colors ${checked ? "bg-red-50/50" : ""}`}>
+                                            <td className="w-10 px-4 py-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={checked}
+                                                    onChange={() => toggleSelect(r._id)}
+                                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                />
+                                            </td>
                                             <td className="px-6 py-4 text-xs text-gray-300 font-medium">{idx + 1}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
@@ -373,25 +487,36 @@ export default function AdminRegistrations() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                <div className="flex items-center justify-center gap-2">
+                                                <div className="flex items-center justify-center gap-2 flex-wrap">
                                                     <button
-                                                        onClick={() => { setSelected(r); setPolicyNumber(r.policyNumber || ""); setReceiptFile(null); }}
-                                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-900 hover:text-white transition-all"
+                                                        onClick={() => loadAndSelect(r)}
+                                                        disabled={detailLoading}
+                                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-900 hover:text-white transition-all disabled:opacity-50"
                                                     >
                                                         ดูข้อมูล <ArrowUpRight size={13} />
                                                     </button>
+                                                    <button
+                                                        onClick={() => openDeleteOneConfirm(r)}
+                                                        disabled={deleteLoading}
+                                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all disabled:opacity-50"
+                                                        title="ลบรายการ"
+                                                    >
+                                                        <Trash2 size={13} />
+                                                    </button>
                                                     {r.status === "approved" ? (
                                                         <button
-                                                            onClick={() => { setSelected(r); setShowCertificate(true); }}
-                                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all whitespace-nowrap shadow-sm"
+                                                            onClick={() => loadAndSelect(r, () => setShowCertificate(true))}
+                                                            disabled={detailLoading}
+                                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all whitespace-nowrap shadow-sm disabled:opacity-50"
                                                         >
                                                             ดูกรมธรรม์ <FileText size={13} />
                                                         </button>
                                                     ) : null}
-                                                    {(r.status === "paid" || (r.status === "approved" && r.paymentReceipt) || r.paymentReceipt) ? (
+                                                    {(r.status === "paid" || r.status === "approved") ? (
                                                         <button
-                                                            onClick={() => { setSelected(r); setShowTransaction(true); }}
-                                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shadow-sm"
+                                                            onClick={() => loadAndSelect(r, () => setShowTransaction(true))}
+                                                            disabled={detailLoading}
+                                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shadow-sm disabled:opacity-50"
                                                         >
                                                             ดูสลิป <CreditCard size={13} />
                                                         </button>
@@ -407,6 +532,55 @@ export default function AdminRegistrations() {
                         </table>
                     </div>
                 </div>
+
+                {/* Delete Confirm Modal */}
+                {deleteConfirm && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            <div className="p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                                        <Trash2 size={24} className="text-red-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-900">
+                                            {deleteConfirm.type === "bulk" ? "ลบหลายรายการ" : "ลบรายการ"}
+                                        </h3>
+                                        <p className="text-sm text-gray-500 mt-0.5">
+                                            {deleteConfirm.type === "bulk"
+                                                ? `ต้องการลบ ${deleteConfirm.count} รายการที่เลือกใช่หรือไม่? การลบไม่สามารถกู้คืนได้`
+                                                : `ลบรายการ ${deleteConfirm.reg.firstName} ${deleteConfirm.reg.lastName} (#${deleteConfirm.reg._id.toString().slice(-6).toUpperCase()}) ใช่หรือไม่? การลบไม่สามารถกู้คืนได้`}
+                                        </p>
+                                    </div>
+                                </div>
+                                {deleteConfirm.error && (
+                                    <p className="text-sm text-red-600 font-medium mb-4 px-3 py-2 bg-red-50 rounded-lg">{deleteConfirm.error}</p>
+                                )}
+                                <div className="flex gap-3 justify-end">
+                                    <button
+                                        onClick={() => setDeleteConfirm(null)}
+                                        disabled={deleteLoading}
+                                        className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all disabled:opacity-50"
+                                    >
+                                        ยกเลิก
+                                    </button>
+                                    <button
+                                        onClick={() => deleteConfirm.type === "bulk" ? executeDeleteBulk() : executeDeleteOne()}
+                                        disabled={deleteLoading}
+                                        className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                                    >
+                                        {deleteLoading ? (
+                                            <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <Trash2 size={16} />
+                                        )}
+                                        ลบ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Detail Modal */}
                 {selected && !showCertificate && (
