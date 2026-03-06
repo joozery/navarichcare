@@ -55,6 +55,7 @@ export default function AdminRegistrations() {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<{ type: "bulk"; count: number; error?: string } | { type: "one"; reg: Registration; error?: string } | null>(null);
+    const [packageMapping, setPackageMapping] = useState<Record<string, string>>({});
     const certRef = useRef<HTMLDivElement>(null);
 
     const toggleSelect = (id: string) => {
@@ -149,7 +150,28 @@ export default function AdminRegistrations() {
         finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchAll(); }, []);
+    useEffect(() => {
+        const fetchMappingData = async () => {
+            try {
+                const [pkgRes, planRes] = await Promise.all([
+                    fetch("/api/packages"),
+                    fetch("/api/coverage-plans")
+                ]);
+                const pkgs = await pkgRes.json();
+                const plans = await planRes.json();
+
+                const mapping: Record<string, string> = {};
+                if (Array.isArray(pkgs)) pkgs.forEach((p: any) => mapping[p._id] = p.name);
+                if (Array.isArray(plans)) plans.forEach((p: any) => mapping[p._id] = p.name);
+                setPackageMapping(mapping);
+            } catch (e) {
+                console.error("Failed to fetch package mapping:", e);
+            }
+        };
+
+        fetchMappingData();
+        fetchAll();
+    }, []);
 
     const handleUpdate = async (status: string) => {
         if (!selected) return;
@@ -238,8 +260,8 @@ export default function AdminRegistrations() {
                         </div>
                         <div className="text-right space-y-2">
                             <div>
-                                <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">เลขอ้างอิง</div>
-                                <div className="text-lg font-black text-white font-mono tracking-widest">#{selected._id.toString().slice(-6).toUpperCase()}</div>
+                                <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">เลขกรมธรรม์</div>
+                                <div className="text-lg font-black text-white font-mono tracking-widest">{selected.policyNumber || `#${selected._id.toString().slice(-6).toUpperCase()}`}</div>
                             </div>
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 rounded text-emerald-400 text-xs font-bold">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> อนุมัติแล้ว
@@ -279,7 +301,7 @@ export default function AdminRegistrations() {
                                     { label: "ยี่ห้อ / รุ่น", value: `${selected.brand} ${selected.model}`.toUpperCase() },
                                     { label: "IMEI", value: selected.imei, mono: true },
                                     { label: "ราคาเครื่อง", value: `${selected.devicePrice?.toLocaleString()} บาท` },
-                                    { label: "แพ็กเกจ", value: selected.packageType || "—" },
+                                    { label: "แพ็กเกจ", value: packageMapping[selected.packageType] || selected.packageType || "—" },
                                 ].map(item => (
                                     <div key={item.label}>
                                         <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{item.label}</div>
@@ -317,7 +339,7 @@ export default function AdminRegistrations() {
                             {[
                                 { label: "วันที่สมัคร", value: new Date(selected.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) },
                                 { label: "วันที่อนุมัติ", value: selected.approvedAt ? new Date(selected.approvedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) },
-                                { label: "เลขอ้างอิง", value: `#${selected._id.toString().slice(-6).toUpperCase()}` },
+                                { label: "เลขกรมธรรม์", value: selected.policyNumber || `#${selected._id.toString().slice(-6).toUpperCase()}` },
                             ].map(item => (
                                 <div key={item.label} className="text-center p-4 border border-gray-200 rounded-sm bg-white">
                                     <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{item.label}</div>
@@ -474,7 +496,7 @@ export default function AdminRegistrations() {
                                                 <div className="text-xs text-gray-400 font-mono mt-0.5">{r.imei}</div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-gray-700 font-medium">{r.packageType || "—"}</div>
+                                                <div className="text-gray-700 font-medium">{packageMapping[r.packageType] || r.packageType || "—"}</div>
                                                 <div className="text-xs text-gray-400">{r.devicePrice?.toLocaleString()} บาท</div>
                                             </td>
                                             <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
@@ -630,7 +652,7 @@ export default function AdminRegistrations() {
                                                 { label: "อีเมล", value: selected.email || "—" },
                                                 { label: "ยี่ห้อ / รุ่น", value: `${selected.brand} ${selected.model}` },
                                                 { label: "IMEI", value: selected.imei, mono: true },
-                                                { label: "แพ็กเกจ", value: selected.packageType || "—" },
+                                                { label: "แพ็กเกจ", value: packageMapping[selected.packageType] || selected.packageType || "—" },
                                                 { label: "ราคาเครื่อง", value: `${selected.devicePrice?.toLocaleString()} บาท` },
                                             ].map(item => (
                                                 <div key={item.label} className="space-y-1 p-4 bg-gray-50 rounded-lg">

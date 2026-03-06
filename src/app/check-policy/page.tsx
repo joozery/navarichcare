@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
     Search, Smartphone, ShieldCheck,
     Printer, Download, Shield,
@@ -34,6 +34,27 @@ export default function CheckPolicy() {
     const [result, setResult] = useState<Registration | null>(null);
     const [error, setError] = useState("");
     const [showCert, setShowCert] = useState(false);
+    const [packageMapping, setPackageMapping] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        const fetchMappingData = async () => {
+            try {
+                const [pkgRes, planRes] = await Promise.all([
+                    fetch("/api/packages"),
+                    fetch("/api/coverage-plans")
+                ]);
+                const pkgs = await pkgRes.json();
+                const plans = await planRes.json();
+                const mapping: Record<string, string> = {};
+                if (Array.isArray(pkgs)) pkgs.forEach((p: any) => mapping[p._id] = p.name);
+                if (Array.isArray(plans)) plans.forEach((p: any) => mapping[p._id] = p.name);
+                setPackageMapping(mapping);
+            } catch (e) {
+                console.error("Failed to fetch mapping:", e);
+            }
+        };
+        fetchMappingData();
+    }, []);
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -124,7 +145,7 @@ export default function CheckPolicy() {
                                     { label: "ยี่ห้อ / รุ่น", value: `${result.brand} ${result.model}`.toUpperCase() },
                                     { label: "IMEI", value: result.imei, mono: true },
                                     { label: "ราคาเครื่อง", value: `${result.devicePrice?.toLocaleString()} บาท` },
-                                    { label: "แพ็กเกจ", value: result.packageType || "—" },
+                                    { label: "แพ็กเกจ", value: packageMapping[result.packageType] || result.packageType || "—" },
                                 ].map(item => (
                                     <div key={item.label}>
                                         <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{item.label}</div>
@@ -158,7 +179,7 @@ export default function CheckPolicy() {
                             {[
                                 { label: "วันที่สมัคร", value: new Date(result.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) },
                                 { label: "วันที่อนุมัติ", value: result.approvedAt ? new Date(result.approvedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) : "-" },
-                                { label: "เลขอ้างอิง", value: `#${result._id.toString().slice(-6).toUpperCase()}` },
+                                { label: "เลขกรมธรรม์", value: result.policyNumber || `#${result._id.toString().slice(-6).toUpperCase()}` },
                             ].map(item => (
                                 <div key={item.label} className="text-center p-4 border border-gray-200 rounded-sm bg-white">
                                     <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{item.label}</div>
@@ -277,7 +298,7 @@ export default function CheckPolicy() {
                                 </div>
                                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">แพ็กเกจ</p>
-                                    <p className="text-sm font-bold text-slate-900">{result.packageType || "-"}</p>
+                                    <p className="text-sm font-bold text-slate-900">{packageMapping[result.packageType] || result.packageType || "-"}</p>
                                 </div>
                             </div>
 
