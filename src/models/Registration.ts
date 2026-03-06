@@ -59,6 +59,10 @@ const RegistrationSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        referenceNumber: {
+            type: String,
+            required: false,
+        },
         approvedAt: {
             type: Date,
             required: false,

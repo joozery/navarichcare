@@ -30,6 +30,7 @@ type Registration = {
     addressDetails?: string;
     images?: { [key: string]: string };
     policyNumber?: string;
+    referenceNumber?: string;
     paymentReceipt?: string;
 };
 
@@ -47,6 +48,7 @@ export default function AdminRegistrations() {
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
     const [policyNumber, setPolicyNumber] = useState("");
+    const [referenceNumber, setReferenceNumber] = useState("");
     const [receiptFile, setReceiptFile] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
     const [showCertificate, setShowCertificate] = useState(false);
@@ -131,6 +133,7 @@ export default function AdminRegistrations() {
             if (json.data) {
                 setSelected(json.data);
                 setPolicyNumber(json.data.policyNumber || "");
+                setReferenceNumber(json.data.referenceNumber || "");
                 setReceiptFile(null);
                 onLoaded?.(json.data);
             }
@@ -181,13 +184,33 @@ export default function AdminRegistrations() {
             const res = await fetch("/api/admin/registrations", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: selected._id, status, paymentReceipt: receiptFile, policyNumber })
+                body: JSON.stringify({ id: selected._id, status, paymentReceipt: receiptFile, policyNumber, referenceNumber })
             });
             if (res.ok) {
                 const data = await res.json();
                 setSelected(data.data);
                 setReceiptFile(null);
                 fetchAll();
+            }
+        } catch (e) { alert("เกิดข้อผิดพลาด"); }
+        finally { setActionLoading(false); }
+    };
+
+    const handleSavePolicyNumber = async () => {
+        if (!selected) return;
+        setActionLoading(true);
+        try {
+            const res = await fetch("/api/admin/registrations", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: selected._id, status: selected.status, policyNumber, referenceNumber })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setSelected(data.data);
+                fetchAll();
+            } else {
+                alert("เกิดข้อผิดพลาดในการบันทึก");
             }
         } catch (e) { alert("เกิดข้อผิดพลาด"); }
         finally { setActionLoading(false); }
@@ -259,9 +282,49 @@ export default function AdminRegistrations() {
                             <div className="text-[11px] text-blue-400 font-semibold tracking-widest mt-0.5">MOBILE PROTECTION POLICY</div>
                         </div>
                         <div className="text-right space-y-2">
-                            <div>
+                            <div className="flex flex-col items-end border-b border-gray-800 pb-2 mb-2">
+                                <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">เลขอ้างอิง (Ref No.)</div>
+                                <div className="flex items-center gap-2 group relative">
+                                    {referenceNumber !== (selected.referenceNumber || "") && (
+                                        <button
+                                            onClick={handleSavePolicyNumber}
+                                            disabled={actionLoading}
+                                            className="absolute right-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-blue-500 hover:bg-blue-400 rounded-md text-white shadow-sm print:hidden disabled:opacity-50"
+                                            title="บันทึก"
+                                        >
+                                            <CheckCircle size={14} />
+                                        </button>
+                                    )}
+                                    <input
+                                        type="text"
+                                        value={referenceNumber}
+                                        onChange={e => setReferenceNumber(e.target.value)}
+                                        placeholder={`#${selected._id.toString().slice(-6).toUpperCase()}`}
+                                        className="text-sm font-bold text-gray-400 font-mono tracking-widest bg-transparent border-b border-dashed border-transparent hover:border-gray-500 focus:border-blue-400 focus:outline-none text-right w-24 transition-colors print:w-auto overflow-hidden print:border-none"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end">
                                 <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">เลขกรมธรรม์</div>
-                                <div className="text-lg font-black text-white font-mono tracking-widest">{selected.policyNumber || `#${selected._id.toString().slice(-6).toUpperCase()}`}</div>
+                                <div className="flex items-center gap-2 group relative">
+                                    {policyNumber !== (selected.policyNumber || "") && (
+                                        <button
+                                            onClick={handleSavePolicyNumber}
+                                            disabled={actionLoading}
+                                            className="absolute right-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 bg-blue-500 hover:bg-blue-400 rounded-md text-white shadow-sm print:hidden disabled:opacity-50"
+                                            title="บันทึก"
+                                        >
+                                            <CheckCircle size={14} />
+                                        </button>
+                                    )}
+                                    <input
+                                        type="text"
+                                        value={policyNumber}
+                                        onChange={e => setPolicyNumber(e.target.value)}
+                                        placeholder={`#${selected._id.toString().slice(-6).toUpperCase()}`}
+                                        className="text-lg font-black text-white font-mono tracking-widest bg-transparent border-b border-dashed border-transparent hover:border-gray-500 focus:border-blue-400 focus:outline-none text-right w-36 transition-colors print:w-auto overflow-hidden print:border-none"
+                                    />
+                                </div>
                             </div>
                             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 rounded text-emerald-400 text-xs font-bold">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> อนุมัติแล้ว
@@ -335,11 +398,12 @@ export default function AdminRegistrations() {
                         </div>
 
                         {/* Dates */}
-                        <div className="grid grid-cols-3 gap-6 pt-4">
+                        <div className="grid grid-cols-4 gap-6 pt-4">
                             {[
                                 { label: "วันที่สมัคร", value: new Date(selected.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) },
                                 { label: "วันที่อนุมัติ", value: selected.approvedAt ? new Date(selected.approvedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) },
-                                { label: "เลขกรมธรรม์", value: selected.policyNumber || `#${selected._id.toString().slice(-6).toUpperCase()}` },
+                                { label: "เลขอ้างอิง", value: referenceNumber || `#${selected._id.toString().slice(-6).toUpperCase()}` },
+                                { label: "เลขกรมธรรม์", value: policyNumber || "รอดำเนินการ" },
                             ].map(item => (
                                 <div key={item.label} className="text-center p-4 border border-gray-200 rounded-sm bg-white">
                                     <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{item.label}</div>
@@ -369,7 +433,7 @@ export default function AdminRegistrations() {
                     {/* Footer */}
                     <div className="border-t border-gray-100 px-14 py-5 flex justify-between items-center bg-gray-50">
                         <div className="text-[10px] text-gray-400">Naravich Care Co., Ltd. | naravichcare.com</div>
-                        <div className="text-[10px] text-gray-400 font-mono">Policy #{selected.policyNumber || policyNumber || "PENDING"}</div>
+                        <div className="text-[10px] text-gray-400 font-mono">Policy #{policyNumber || "PENDING"}</div>
                     </div>
                 </div>
             </div>
@@ -743,15 +807,28 @@ export default function AdminRegistrations() {
                                             {receiptFile && <img src={receiptFile} alt="slip" className="w-full max-h-36 object-contain rounded-md border border-gray-200 bg-white p-2" />}
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">เลขที่กรมธรรม์</label>
-                                            <input
-                                                type="text"
-                                                placeholder="ระบุเลขกรมธรรม์..."
-                                                className="w-full px-4 py-3 rounded-md border border-gray-200 bg-white text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300 placeholder:font-normal"
-                                                value={policyNumber}
-                                                onChange={e => setPolicyNumber(e.target.value)}
-                                            />
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">เลขอ้างอิง (Ref No.)</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder={`#${selected._id.toString().slice(-6).toUpperCase()}`}
+                                                    className="w-full px-4 py-3 rounded-md border border-gray-200 bg-white text-sm font-bold text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300 placeholder:font-normal font-mono"
+                                                    value={referenceNumber}
+                                                    onChange={e => setReferenceNumber(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">เลขที่กรมธรรม์</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="ระบุเลขกรมธรรม์..."
+                                                    className="w-full px-4 py-3 rounded-md border border-gray-200 bg-white text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-300 placeholder:font-normal font-mono tracking-wider"
+                                                    value={policyNumber}
+                                                    onChange={e => setPolicyNumber(e.target.value)}
+                                                />
+                                            </div>
                                         </div>
 
                                         <div className="flex-1" />

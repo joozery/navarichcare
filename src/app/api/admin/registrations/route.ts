@@ -18,11 +18,12 @@ export async function GET() {
 export async function PATCH(req: Request) {
     try {
         await connectToDatabase();
-        const { id, status, paymentReceipt, policyNumber } = await req.json();
+        const { id, status, paymentReceipt, policyNumber, referenceNumber } = await req.json();
 
         const updateData: any = { status };
         if (paymentReceipt) updateData.paymentReceipt = paymentReceipt;
-        if (policyNumber) updateData.policyNumber = policyNumber;
+        if (policyNumber !== undefined) updateData.policyNumber = policyNumber;
+        if (referenceNumber !== undefined) updateData.referenceNumber = referenceNumber;
         if (status === "approved") updateData.approvedAt = new Date();
 
         const registration = await Registration.findByIdAndUpdate(id, updateData, { new: true });

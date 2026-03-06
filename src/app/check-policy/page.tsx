@@ -24,6 +24,8 @@ type Registration = {
     approvedAt?: string;
     idCard?: string;
     policyNumber?: string;
+    referenceNumber?: string;
+    paymentReceipt?: string;
     email?: string;
 };
 
@@ -109,10 +111,14 @@ export default function CheckPolicy() {
                             <div className="text-[11px] text-blue-400 font-semibold tracking-widest mt-0.5">MOBILE PROTECTION POLICY</div>
                         </div>
                         <div className="text-right">
+                            <div className="flex flex-col items-end border-b border-gray-800 pb-2 mb-2">
+                                <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">เลขอ้างอิง (Ref No.)</div>
+                                <div className="text-sm font-bold text-gray-400 font-mono tracking-widest">{result.referenceNumber || `#${result._id.toString().slice(-6).toUpperCase()}`}</div>
+                            </div>
                             <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">เลขกรมธรรม์</div>
-                            <div className="text-lg font-black text-white font-mono tracking-widest">{result.policyNumber || "PENDING"}</div>
+                            <div className="text-lg font-black text-white font-mono tracking-widest">{result.policyNumber || "รอดำเนินการ"}</div>
                             <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 rounded text-emerald-400 text-xs font-bold">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> อนุมัติแล้ว
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> {result.status === "approved" ? "อนุมัติแล้ว" : "รอดำเนินการ"}
                             </div>
                         </div>
                     </div>
@@ -175,11 +181,12 @@ export default function CheckPolicy() {
                                 ))}
                             </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-6 pt-4">
+                        <div className="grid grid-cols-4 gap-6 pt-4">
                             {[
                                 { label: "วันที่สมัคร", value: new Date(result.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) },
                                 { label: "วันที่อนุมัติ", value: result.approvedAt ? new Date(result.approvedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) : "-" },
-                                { label: "เลขกรมธรรม์", value: result.policyNumber || `#${result._id.toString().slice(-6).toUpperCase()}` },
+                                { label: "เลขอ้างอิง", value: result.referenceNumber || `#${result._id.toString().slice(-6).toUpperCase()}` },
+                                { label: "เลขกรมธรรม์", value: result.policyNumber || `รอดำเนินการ` },
                             ].map(item => (
                                 <div key={item.label} className="text-center p-4 border border-gray-200 rounded-sm bg-white">
                                     <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">{item.label}</div>
@@ -205,7 +212,7 @@ export default function CheckPolicy() {
                     </div>
                     <div className="border-t border-gray-100 px-14 py-5 flex justify-between items-center bg-gray-50">
                         <div className="text-[10px] text-gray-400">Naravich Care Co., Ltd. | naravichcare.com</div>
-                        <div className="text-[10px] text-gray-400 font-mono">Policy #{result.policyNumber || "PENDING"}</div>
+                        <div className="text-[10px] text-gray-400 font-mono">Policy #{result.policyNumber || "PENDING"} | Ref {result.referenceNumber || `#${result._id.toString().slice(-6).toUpperCase()}`}</div>
                     </div>
                 </div>
             </div>

@@ -110,7 +110,7 @@ export default function SuccessPage() {
                 </div>
                 <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tight">ส่งข้อมูลการสมัครเรียบร้อย!</h2>
                 <div className="bg-blue-600 text-white px-6 py-2 rounded-full font-black text-xl shadow-lg animate-pulse">
-                    เลขอ้างอิงของคุณ: <span className="underline">{registrationResult._id?.toString().slice(-6).toUpperCase()}</span>
+                    เลขอ้างอิงของคุณ: <span className="underline">{registrationResult.referenceNumber || registrationResult._id?.toString().slice(-6).toUpperCase()}</span>
                 </div>
                 <p className="text-slate-500 font-bold text-lg max-w-md">
                     กรุณาติดต่อเจ้าหน้าที่เพื่อแจ้งเลขอ้างอิงและดำเนินการชำระเงินเพื่อเปิดใช้งานความคุ้มครอง
