@@ -24,6 +24,18 @@ export async function POST(req: Request) {
         }
 
         const agent = await Agent.create(body);
+
+        // Record Admin Log
+        const { recordAdminLog } = await import("@/lib/admin-log");
+        await recordAdminLog({
+            action: "create_agent",
+            description: `สร้างตัวแทนใหม่: ${agent.name} (Code: ${agent.agentCode})`,
+            targetId: agent._id.toString(),
+            targetType: "Agent",
+            details: { name: agent.name, code: agent.agentCode },
+            req
+        });
+
         return NextResponse.json({ success: true, agent });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });

@@ -9,20 +9,7 @@ export default function AgentPortal() {
     const [agentData, setAgentData] = useState<any>(null);
     const [stats, setStats] = useState({ totalVolume: 0, customerCount: 0, commission: 0 });
     const [recentLoans, setRecentLoans] = useState<any[]>([]);
-    const [isAppModalOpen, setIsAppModalOpen] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-
-    // Registration Form State
-    const [formData, setFormData] = useState({
-        customerName: "",
-        customerPhone: "",
-        idCard: "",
-        deviceModel: "",
-        imei: "",
-        loanAmount: 10000,
-        totalInstallments: 12,
-        loanType: "ผ่อนเครื่อง" as "ผ่อนเครื่อง" | "จำนำ iCloud"
-    });
+    const [recentRegistrations, setRecentRegistrations] = useState<any[]>([]);
 
     const fetchAgentStats = async (id: string) => {
         try {
@@ -30,7 +17,8 @@ export default function AgentPortal() {
             const data = await res.json();
             if (data.success) {
                 setStats(data.stats);
-                setRecentLoans(data.recentLoans);
+                setRecentLoans(data.recentLoans || []);
+                setRecentRegistrations(data.recentRegistrations || []);
             }
         } catch (e) { console.error(e); }
     };
@@ -162,15 +150,9 @@ export default function AgentPortal() {
                             <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Agent Performance</h3>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">สรุปภาพรวมผลงานและความเคลื่อนไหวล่าสุด</p>
                         </div>
-                        <button
-                            onClick={() => setIsAppModalOpen(true)}
-                            className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:scale-[1.05] transition-all shadow-xl shadow-slate-200 group"
-                        >
-                            <Plus size={18} /> สร้างใบสมัครใหม่
-                        </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:border-blue-500 transition-all">
                             <div className="relative z-10 space-y-6">
                                 <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
@@ -201,8 +183,20 @@ export default function AgentPortal() {
                                     <Users size={24} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">จำนวนลูกค้าทั้งหมด</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">จำนวนลูกค้าผ่อนเครื่อง</p>
                                     <h4 className="text-3xl font-black text-slate-900 tracking-tight">{stats.customerCount} ราย</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:border-blue-600 transition-all">
+                            <div className="relative z-10 space-y-6">
+                                <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white">
+                                    <ShieldCheck size={24} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">จำนวนลูกค้าประกัน</p>
+                                    <h4 className="text-3xl font-black text-blue-600 tracking-tight">{(stats as any).registrationCount || 0} ราย</h4>
                                 </div>
                             </div>
                         </div>
@@ -210,39 +204,39 @@ export default function AgentPortal() {
                 </div>
 
                 <div className="grid lg:grid-cols-12 gap-8">
-                    {/* Recent Activities */}
+                    {/* Insurance Activities */}
                     <div className="lg:col-span-8 space-y-6">
                         <div className="flex items-center gap-3">
-                            <History size={20} className="text-slate-400" />
-                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">รายการลูกค้าล่าสุด</h3>
+                            <ShieldCheck size={20} className="text-blue-500" />
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">ประกันกรมธรรม์ล่าสุด (Insurance)</h3>
                         </div>
 
-                        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
-                            {recentLoans.length === 0 ? (
+                        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[300px]">
+                            {recentRegistrations.length === 0 ? (
                                 <div className="py-24 flex flex-col items-center justify-center opacity-30">
-                                    <Users size={48} className="text-slate-200 mb-4" />
-                                    <p className="text-xs font-black uppercase tracking-widest">ยังไม่มีรายการลูกค้าในพอร์ต</p>
+                                    <Smartphone size={48} className="text-slate-200 mb-4" />
+                                    <p className="text-xs font-black uppercase tracking-widest">ยังไม่มีรายการประกัน</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-slate-50">
-                                    {recentLoans.map(loan => (
-                                        <div key={loan._id} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors group">
+                                    {recentRegistrations.map(reg => (
+                                        <div key={reg._id} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors group">
                                             <div className="flex items-center gap-5">
-                                                <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 font-black text-xs uppercase group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                                    {loan.customerName.substring(0, 2)}
+                                                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 font-black text-xs uppercase transition-all">
+                                                    {reg.firstName?.substring(0, 1)}{reg.lastName?.substring(0, 1)}
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-sm font-black text-slate-900 uppercase">{loan.customerName}</h4>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{loan.deviceModel}</p>
+                                                    <h4 className="text-sm font-black text-slate-900 uppercase">{reg.firstName} {reg.lastName}</h4>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{reg.brand} {reg.model}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-8">
                                                 <div className="text-right">
-                                                    <p className="text-xs font-black text-slate-900">฿{loan.loanAmount.toLocaleString()}</p>
-                                                    <p className="text-[9px] font-black text-blue-600 uppercase mt-0.5">{loan.contractId}</p>
+                                                    <p className="text-xs font-black text-slate-900">{reg.packageType}</p>
+                                                    <p className="text-[9px] font-black text-blue-600 uppercase mt-0.5">{reg.policyNumber || "รออนุมัติ"}</p>
                                                 </div>
-                                                <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase ${loan.status === 'normal' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
-                                                    {loan.status}
+                                                <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase ${reg.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                                                    {reg.status}
                                                 </div>
                                                 <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-900 transition-all" />
                                             </div>
@@ -285,82 +279,6 @@ export default function AgentPortal() {
                     </div>
                 </div>
             </main>
-
-            {/* Application Modal */}
-            {isAppModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500">
-                        <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">สร้างใบสมัครใหม่</h3>
-                                <p className="text-[10px] font-black text-blue-600 uppercase mt-1">New Customer Onboarding</p>
-                            </div>
-                            <button onClick={() => setIsAppModalOpen(false)} className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 transition-colors flex items-center justify-center font-bold">✕</button>
-                        </div>
-                        <form className="p-8 space-y-6 max-h-[70vh] overflow-y-auto" onSubmit={async (e) => {
-                            e.preventDefault();
-                            setSubmitting(true);
-                            try {
-                                const res = await fetch("/api/admin/loans", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ ...formData, agentId: agentData._id, branchId: agentData.branchId || "67c13dc2e17631cc95968840" })
-                                });
-                                const data = await res.json();
-                                if (data.success) {
-                                    alert("ส่งใบสมัครเรียบร้อยแล้ว!");
-                                    setIsAppModalOpen(false);
-                                    fetchAgentStats(agentData._id);
-                                } else {
-                                    alert(data.error);
-                                }
-                            } catch (e) { alert("เกิดข้อผิดพลาดในการส่งข้อมูล"); }
-                            finally { setSubmitting(false); }
-                        }}>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ชื่อ-นามสกุล ลูกค้า</label>
-                                    <input required value={formData.customerName} onChange={e => setFormData({ ...formData, customerName: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">เบอร์โทรศัพท์</label>
-                                    <input required value={formData.customerPhone} onChange={e => setFormData({ ...formData, customerPhone: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">เลขบัตรประชาชน (13 หลัก)</label>
-                                <input required maxLength={13} value={formData.idCard} onChange={e => setFormData({ ...formData, idCard: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-black font-mono focus:bg-white focus:border-blue-600 outline-none transition-all" />
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">รุ่นโทรศัพท์ / สเปก</label>
-                                    <input required value={formData.deviceModel} onChange={e => setFormData({ ...formData, deviceModel: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">หมายเลข IMEI</label>
-                                    <input required value={formData.imei} onChange={e => setFormData({ ...formData, imei: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all" />
-                                </div>
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ยอดจัดสินเชื่อ (บาท)</label>
-                                    <input type="number" required value={formData.loanAmount} onChange={e => setFormData({ ...formData, loanAmount: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-black text-blue-600 focus:bg-white focus:border-blue-600 outline-none transition-all" />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">แผนการผ่อนชำระ</label>
-                                    <select value={formData.totalInstallments} onChange={e => setFormData({ ...formData, totalInstallments: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:bg-white focus:border-blue-600 outline-none transition-all">
-                                        {[12, 18, 24, 36].map(v => <option key={v} value={v}>{v} งวด</option>)}
-                                    </select>
-                                </div>
-                            </div>
-                            <button type="submit" disabled={submitting} className="w-full py-5 bg-slate-900 text-white rounded-2xl text-[12px] font-black uppercase tracking-[0.3em] hover:bg-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
-                                {submitting ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
-                                {submitting ? "กำลังส่งใบสมัคร..." : "ยืนยันการส่งใบสมัคร"}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

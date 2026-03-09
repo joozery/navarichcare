@@ -24,6 +24,18 @@ export async function POST(req: Request) {
         }
 
         const user = await AdminUser.create(data);
+
+        // Record Admin Log
+        const { recordAdminLog } = await import("@/lib/admin-log");
+        await recordAdminLog({
+            action: "create_admin",
+            description: `สร้างแอดมินใหม่: ${user.name} (User: ${user.username})`,
+            targetId: user._id.toString(),
+            targetType: "AdminUser",
+            details: { name: user.name, role: user.role },
+            req
+        });
+
         return NextResponse.json(user, { status: 201 });
     } catch (error: any) {
         if (error.code === 11000) {

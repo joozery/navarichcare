@@ -41,6 +41,8 @@ interface RegisterContextType {
     setSubDistrict: (v: string) => void;
     addressDetails: string;
     setAddressDetails: (v: string) => void;
+    agentCode: string;
+    setAgentCode: (v: string) => void;
 
     registrationResult: any;
     setRegistrationResult: (v: any) => void;
@@ -69,6 +71,7 @@ export function RegisterProvider({ children }: { children: React.ReactNode }) {
     const [district, setDistrict] = useState("");
     const [subDistrict, setSubDistrict] = useState("");
     const [addressDetails, setAddressDetails] = useState("");
+    const [agentCode, setAgentCode] = useState("");
     const [registrationResult, setRegistrationResult] = useState<any>(null);
 
     // Initial Load (Text only)
@@ -93,6 +96,7 @@ export function RegisterProvider({ children }: { children: React.ReactNode }) {
                 if (data.district) setDistrict(data.district);
                 if (data.subDistrict) setSubDistrict(data.subDistrict);
                 if (data.addressDetails) setAddressDetails(data.addressDetails);
+                if (data.agentCode) setAgentCode(data.agentCode);
             } catch (e) {
                 console.error("Error loading registerState_text", e);
             }
@@ -103,14 +107,14 @@ export function RegisterProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const state = {
             phone, imei, brand, model, devicePrice, deviceType, packageType,
-            firstName, lastName, idCard, email, postCode, province, district, subDistrict, addressDetails
+            firstName, lastName, idCard, email, postCode, province, district, subDistrict, addressDetails, agentCode
         };
         try {
             localStorage.setItem("registerState_text", JSON.stringify(state));
         } catch (e) {
             console.error("Quota exceeded for text only state", e);
         }
-    }, [phone, imei, brand, model, devicePrice, packageType, firstName, lastName, idCard, email, postCode, province, district, subDistrict, addressDetails]);
+    }, [phone, imei, brand, model, devicePrice, packageType, firstName, lastName, idCard, email, postCode, province, district, subDistrict, addressDetails, agentCode]);
 
     const setDeviceImages = (key: string, v: string | null) => {
         setDeviceImagesState(prev => ({ ...prev, [key]: v }));
@@ -123,7 +127,7 @@ export function RegisterProvider({ children }: { children: React.ReactNode }) {
             deviceImages, setDeviceImages, receiptImage, setReceiptImage,
             firstName, setFirstName, lastName, setLastName, idCard, setIdCard, email, setEmail,
             postCode, setPostCode, province, setProvince, district, setDistrict, subDistrict, setSubDistrict, addressDetails, setAddressDetails,
-            registrationResult, setRegistrationResult
+            agentCode, setAgentCode, registrationResult, setRegistrationResult
         }}>
             {children}
         </RegisterContext.Provider>

@@ -9,7 +9,7 @@ export default function Step6() {
         phone, imei, brand, model, devicePrice, deviceType, packageType, deviceImages, receiptImage,
         firstName, setFirstName, lastName, setLastName, idCard, setIdCard, email, setEmail,
         postCode, setPostCode, province, setProvince, district, setDistrict, subDistrict, setSubDistrict, addressDetails, setAddressDetails,
-        setRegistrationResult
+        agentCode, setRegistrationResult
     } = useRegister();
     const [loading, setLoading] = useState(false);
 
@@ -23,6 +23,7 @@ export default function Step6() {
                     phone, imei, brand, model,
                     firstName, lastName, idCard, email,
                     postCode, province, district, subDistrict, addressDetails,
+                    agentCode,
                     devicePrice: Number(devicePrice) || 0,
                     deviceType,
                     packageType,

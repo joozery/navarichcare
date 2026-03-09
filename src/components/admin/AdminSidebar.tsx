@@ -39,6 +39,7 @@ const navGroups: NavGroup[] = [
         group: "รายงาน & บัญชี",
         items: [
             { title: "กำไรจริง (Amortization)", icon: <Percent size={18} />, href: "/admin/accounting" },
+            { title: "บันทึกการใช้งาน (Logs)", icon: <History size={18} />, href: "/admin/logs" },
         ],
     },
     {

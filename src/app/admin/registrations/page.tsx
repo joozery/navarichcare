@@ -189,6 +189,8 @@ export default function AdminRegistrations() {
             if (res.ok) {
                 const data = await res.json();
                 setSelected(data.data);
+                setPolicyNumber(data.data.policyNumber || "");
+                setReferenceNumber(data.data.referenceNumber || "");
                 setReceiptFile(null);
                 fetchAll();
             }
@@ -208,6 +210,8 @@ export default function AdminRegistrations() {
             if (res.ok) {
                 const data = await res.json();
                 setSelected(data.data);
+                setPolicyNumber(data.data.policyNumber || "");
+                setReferenceNumber(data.data.referenceNumber || "");
                 fetchAll();
             } else {
                 alert("เกิดข้อผิดพลาดในการบันทึก");

@@ -22,11 +22,44 @@ export async function PATCH(req: Request) {
 
         const updateData: any = { status };
         if (paymentReceipt) updateData.paymentReceipt = paymentReceipt;
-        if (policyNumber !== undefined) updateData.policyNumber = policyNumber;
-        if (referenceNumber !== undefined) updateData.referenceNumber = referenceNumber;
-        if (status === "approved") updateData.approvedAt = new Date();
+
+        // Auto-generate Policy Number & Reference Number if approved and empty
+        if (status === "approved") {
+            const currentDoc = await Registration.findById(id);
+
+            // Generate Policy Number if not exists and not provided
+            if (!currentDoc.policyNumber && !policyNumber) {
+                const count = await Registration.countDocuments({ status: "approved" });
+                updateData.policyNumber = `NC-${(1000 + count + 1).toString()}`;
+            } else if (policyNumber !== undefined) {
+                updateData.policyNumber = policyNumber;
+            }
+
+            // Generate Reference Number if not exists and not provided
+            if (!currentDoc.referenceNumber && !referenceNumber) {
+                updateData.referenceNumber = `REF-${id.slice(-6).toUpperCase()}`;
+            } else if (referenceNumber !== undefined) {
+                updateData.referenceNumber = referenceNumber;
+            }
+
+            updateData.approvedAt = new Date();
+        } else {
+            if (policyNumber !== undefined) updateData.policyNumber = policyNumber;
+            if (referenceNumber !== undefined) updateData.referenceNumber = referenceNumber;
+        }
 
         const registration = await Registration.findByIdAndUpdate(id, updateData, { new: true });
+
+        // Record Admin Log
+        const { recordAdminLog } = await import("@/lib/admin-log");
+        await recordAdminLog({
+            action: status === "approved" ? "approve_registration" : status === "rejected" ? "reject_registration" : "update_registration_status",
+            description: `${status === "approved" ? "อนุมัติ" : status === "rejected" ? "ปฏิเสธ" : "อัปเดต"}การลงทะเบียนของ ${registration.firstName} ${registration.lastName} (ID: ${id})`,
+            targetId: id,
+            targetType: "Registration",
+            details: { status, policyNumber: updateData.policyNumber },
+            req
+        });
 
         return NextResponse.json({ message: "Updated successfully", data: registration }, { status: 200 });
     } catch (error: any) {

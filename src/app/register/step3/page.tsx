@@ -81,15 +81,13 @@ export default function Step3() {
                             </div>
                         </div>
 
-                        {/* Select Button */}
-                        <div className="p-6 pt-0 flex flex-col items-center gap-4">
+                        <div className="p-6 pt-0 flex flex-col items-center">
                             <button
                                 onClick={() => setPackageType(pkg._id)}
                                 className={`w-full py-3 rounded-full text-sm font-black text-white transition-all transform active:scale-95 shadow-md ${packageType === pkg._id ? 'bg-gradient-to-r from-blue-700 via-blue-500 to-cyan-500' : 'bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-700 hover:to-cyan-500'}`}
                             >
                                 {packageType === pkg._id ? 'เลือกแล้ว' : 'เลือก'}
                             </button>
-                            <button className="text-[10px] font-bold text-slate-400 hover:text-blue-500 underline transition-colors uppercase tracking-widest">ดูรายละเอียด</button>
                         </div>
                     </div>
                 ))}

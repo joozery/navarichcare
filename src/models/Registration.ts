@@ -63,6 +63,11 @@ const RegistrationSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
+        agentCode: {
+            type: String,
+            required: false,
+            index: true,
+        },
         approvedAt: {
             type: Date,
             required: false,
@@ -78,5 +83,5 @@ const RegistrationSchema = new mongoose.Schema(
     }
 );
 
-export default mongoose.models.Registration ||
-    mongoose.model("Registration", RegistrationSchema);
+const Registration = mongoose.models.Registration || mongoose.model("Registration", RegistrationSchema);
+export default Registration;

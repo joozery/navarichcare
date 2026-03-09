@@ -15,6 +15,11 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Missing agentId" }, { status: 400 });
         }
 
+        const agent = await Agent.findById(agentId);
+        if (!agent) {
+            return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+        }
+
         const stats = await Loan.aggregate([
             { $match: { agentId: new mongoose.Types.ObjectId(agentId) } },
             {
@@ -35,14 +40,24 @@ export async function GET(req: Request) {
             .sort({ createdAt: -1 })
             .limit(5);
 
+        // Fetch registrations made with this agent's code
+        const recentRegistrations = await Registration.find({ agentCode: agent.agentCode })
+            .sort({ createdAt: -1 })
+            .limit(10);
+
+        // Count insurance registrations
+        const registrationCount = await Registration.countDocuments({ agentCode: agent.agentCode });
+
         return NextResponse.json({
             success: true,
             stats: {
                 totalVolume: summary.totalVolume,
                 customerCount: summary.customerCount,
+                registrationCount: registrationCount, // <--- New: count of people who bought insurance
                 commission: estimatedCommission
             },
-            recentLoans
+            recentLoans,
+            recentRegistrations
         });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
