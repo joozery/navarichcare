@@ -43,9 +43,15 @@ export default function UserManagement() {
         try {
             const res = await fetch("/api/admin/users");
             const data = await res.json();
-            setUsers(data);
+            if (Array.isArray(data)) {
+                setUsers(data);
+            } else {
+                console.error("API Error or Invalid format:", data);
+                setUsers([]);
+            }
         } catch (error) {
             console.error("Fetch Users Error:", error);
+            setUsers([]);
         } finally {
             setLoading(false);
         }
@@ -147,30 +153,38 @@ export default function UserManagement() {
 
             {/* User List Cards */}
             <div className="grid gap-3">
-                {users.map((user) => (
-                    <div key={user._id} className="bg-white border border-gray-100 p-4 rounded-2xl flex items-center justify-between hover:border-slate-300 transition-all group group shadow-sm">
-                        <div className="flex items-center gap-4">
-                             <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
-                                 <User size={20} />
-                             </div>
-                             <div>
-                                 <div className="flex items-center gap-2">
-                                     <p className="text-sm font-black text-slate-800 uppercase italic leading-none">{user.name}</p>
-                                     <span className="bg-slate-100 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest text-slate-500">{getRoleLabel(user.role)}</span>
-                                 </div>
-                                 <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 italic opacity-60">@{user.username} / {user.email || "-"}</p>
-                             </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                             <button onClick={() => handleOpenModal(user)} className="p-2 bg-gray-50 text-slate-400 rounded-lg hover:bg-slate-900 hover:text-white transition-all">
-                                 <Edit2 size={14} />
-                             </button>
-                             <button onClick={() => handleDelete(user._id)} className="p-2 bg-gray-50 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all">
-                                 <Trash2 size={14} />
-                             </button>
-                        </div>
+                {users.length === 0 ? (
+                    <div className="bg-white border border-dashed border-gray-200 py-16 rounded-3xl text-center text-gray-300 flex flex-col items-center gap-3">
+                        <ShieldAlert size={40} className="opacity-20" />
+                        <p className="text-xs font-black uppercase tracking-widest italic opacity-50">ยังไม่มีข้อมูลพนักงานในระบบซ่อม</p>
+                        <p className="text-[9px] font-bold uppercase tracking-tighter text-gray-400">กรุณากดปุ่มเพิ่มพนักงานใหม่ที่มุมบนขวา</p>
                     </div>
-                ))}
+                ) : (
+                    users.map((user) => (
+                        <div key={user._id} className="bg-white border border-gray-100 p-4 rounded-2xl flex items-center justify-between hover:border-slate-300 transition-all group group shadow-sm">
+                            <div className="flex items-center gap-4">
+                                 <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+                                     <User size={20} />
+                                 </div>
+                                 <div>
+                                     <div className="flex items-center gap-2">
+                                         <p className="text-sm font-black text-slate-800 uppercase italic leading-none">{user.name}</p>
+                                         <span className="bg-slate-100 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest text-slate-500">{getRoleLabel(user.role)}</span>
+                                     </div>
+                                     <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 italic opacity-60">@{user.username} / {user.email || "-"}</p>
+                                 </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                 <button onClick={() => handleOpenModal(user)} className="p-2 bg-gray-50 text-slate-400 rounded-lg hover:bg-slate-900 hover:text-white transition-all">
+                                     <Edit2 size={14} />
+                                 </button>
+                                 <button onClick={() => handleDelete(user._id)} className="p-2 bg-gray-50 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all">
+                                     <Trash2 size={14} />
+                                 </button>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
 
             {/* Modal Form */}
@@ -196,6 +210,10 @@ export default function UserManagement() {
                             <div className="space-y-1">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic ml-1 leading-none">{editingUser ? "New Password (Optional)" : "Password"}</label>
                                 <input type="password" required={!editingUser} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-black italic outline-none focus:border-blue-500" placeholder="••••••••" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic ml-1 leading-none">Email Address</label>
+                                <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-black italic outline-none focus:border-blue-500" placeholder="staff@naravich.com" />
                             </div>
                             <div className="space-y-1">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic ml-1 leading-none">Role Access</label>
