@@ -3,6 +3,7 @@ import dbConnect from "@/lib/mongodb";
 import RepairJob from "@/models/RepairJob";
 
 import { sendLineFlexMessage } from "@/lib/line-messaging";
+import { recordAdminLog } from "@/lib/admin-log";
 
 interface Context {
     params: Promise<{ id: string }>;
@@ -64,7 +65,10 @@ export async function PATCH(req: Request, { params }: Context) {
             }
         };
 
-        // If status is changing, track it in history and notify via LINE Messaging API
+        // ADMIN ACTIVITY LOGGING
+        const jobTitle = `${currentJob.jobId} (${currentJob.brand} ${currentJob.deviceModel})`;
+
+        // 1. Log Status Changes
         if (data.status && data.status !== currentJob.status) {
             const historyItem = {
                 status: data.status,
@@ -80,7 +84,7 @@ export async function PATCH(req: Request, { params }: Context) {
                 data.completedAt = new Date();
             }
 
-            // ADVANCED LINE NOTIFICATION (FLEX MESSAGE)
+            // LINE NOTIFICATION
             const adminUserId = process.env.LINE_ADMIN_USER_ID;
             if (adminUserId) {
                 await sendLineFlexMessage(
@@ -90,6 +94,60 @@ export async function PATCH(req: Request, { params }: Context) {
                     getStatusColor(data.status)
                 );
             }
+
+            // ACTIVITY LOG
+            await recordAdminLog({
+                req,
+                action: "update_job_status",
+                description: `เปลี่ยนสถานะงาน ${jobTitle} เป็น "${getStatusLabel(data.status)}"`,
+                targetId: id,
+                targetType: "RepairJob",
+                details: { oldStatus: currentJob.status, newStatus: data.status, note: data.statusNote }
+            });
+        }
+
+        // 2. Log Price Updates
+        if (typeof data.totalPrice !== "undefined" && data.totalPrice !== currentJob.totalPrice) {
+            await recordAdminLog({
+                req,
+                action: "update_job_price",
+                description: `อัปเดตราคาเสนอซ่อมงาน ${jobTitle} เป็น ${data.totalPrice} บาท`,
+                targetId: id,
+                targetType: "RepairJob",
+                details: { labor: data.laborCost, parts: data.partsCost, total: data.totalPrice }
+            });
+        }
+
+        // 3. Log Photo Uploads
+        if (data.photosBefore && data.photosBefore.length > (currentJob.photosBefore?.length || 0)) {
+            await recordAdminLog({
+                req,
+                action: "upload_photo_before",
+                description: `อัปโหลดรูปภาพ "ก่อนซ่อม" เพิ่มเติมในงาน ${jobTitle}`,
+                targetId: id,
+                targetType: "RepairJob"
+            });
+        }
+        if (data.photosAfter && data.photosAfter.length > (currentJob.photosAfter?.length || 0)) {
+            await recordAdminLog({
+                req,
+                action: "upload_photo_after",
+                description: `อัปโหลดรูปภาพ "หลังซ่อม" เพิ่มเติมในงาน ${jobTitle}`,
+                targetId: id,
+                targetType: "RepairJob"
+            });
+        }
+
+        // 4. Log Warranty Updates
+        if (data.warrantyExpireDate && data.warrantyExpireDate !== currentJob.warrantyExpireDate) {
+            await recordAdminLog({
+                req,
+                action: "update_warranty",
+                description: `อัปเดตข้อมูลการรับประกันงาน ${jobTitle}`,
+                targetId: id,
+                targetType: "RepairJob",
+                details: { expire: data.warrantyExpireDate, void: data.voidStickerCode }
+            });
         }
 
         const updatedJob = await RepairJob.findByIdAndUpdate(id, data, { new: true })

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import RepairJob from "@/models/RepairJob";
 import RepairCustomer from "@/models/RepairCustomer";
+import { recordAdminLog } from "@/lib/admin-log";
 
 export async function GET(req: Request) {
     try {
@@ -61,6 +62,15 @@ export async function POST(req: Request) {
         const job = await RepairJob.create({
             ...data,
             customer: customerId,
+        });
+
+        // Log the action
+        await recordAdminLog({
+            req,
+            action: "create_repair_job",
+            description: `ลงทะเบียนรับเครื่องซ่อมใหม่เลขที่ ${job.jobId} (${job.brand} ${job.deviceModel})`,
+            targetId: job._id.toString(),
+            targetType: "RepairJob"
         });
 
         return NextResponse.json(job, { status: 201 });

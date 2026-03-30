@@ -55,6 +55,9 @@ export default function AdminLogsPage() {
     );
 
     const getActionBadge = (action: string) => {
+        if (action.includes("job")) return "bg-blue-50 text-blue-600 ring-blue-100";
+        if (action.includes("customer")) return "bg-emerald-50 text-emerald-600 ring-emerald-100";
+        if (action.includes("user")) return "bg-slate-50 text-slate-800 ring-slate-200";
         if (action.includes("approve")) return "bg-emerald-50 text-emerald-600 ring-emerald-100";
         if (action.includes("reject")) return "bg-red-50 text-red-600 ring-red-100";
         if (action.includes("delete")) return "bg-orange-50 text-orange-600 ring-orange-100";
@@ -63,6 +66,9 @@ export default function AdminLogsPage() {
     };
 
     const getActionIcon = (action: string) => {
+        if (action.includes("job")) return <Smartphone size={14} />;
+        if (action.includes("customer")) return <User size={14} />;
+        if (action.includes("user")) return <Shield size={14} />;
         if (action.includes("approve")) return <CheckCircle size={14} />;
         if (action.includes("reject")) return <XCircle size={14} />;
         if (action.includes("delete")) return <AlertCircle size={14} />;

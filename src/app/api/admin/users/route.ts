@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import AdminUser from "@/models/AdminUser";
+import { recordAdminLog } from "@/lib/admin-log";
 
 export async function GET() {
     try {
@@ -32,6 +33,15 @@ export async function POST(req: Request) {
             role,
             email,
             isActive: true
+        });
+
+        // ACTIVITY LOG
+        await recordAdminLog({
+            req,
+            action: "create_user",
+            description: `เพิ่มพนักงานใหม่ชื่อ "${newUser.name}" (@${newUser.username}) ระดับสิทธิ์: ${newUser.role}`,
+            targetId: newUser._id.toString(),
+            targetType: "AdminUser"
         });
 
         const userResponse = newUser.toObject();
@@ -73,7 +83,20 @@ export async function DELETE(req: Request) {
 
         if (!id) return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
+        const userToDelete = await AdminUser.findById(id);
+        if (!userToDelete) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
         await AdminUser.findByIdAndDelete(id);
+
+        // ACTIVITY LOG
+        await recordAdminLog({
+            req,
+            action: "delete_user",
+            description: `ลบพนักงานชื่อ "${userToDelete.name}" (@${userToDelete.username}) ออกจากระบบ`,
+            targetId: id,
+            targetType: "AdminUser"
+        });
+
         return NextResponse.json({ message: "User deleted successfully" });
     } catch (error) {
         console.error("Delete User Error:", error);
