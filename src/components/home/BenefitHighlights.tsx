@@ -64,7 +64,7 @@ export function BenefitHighlights() {
                     {topBenefits.map((b) => (
                         <div key={b.title} className="bg-gray-50 rounded-3xl p-6 flex flex-col items-center text-center gap-4 hover:shadow-md transition-shadow border border-gray-100">
                             <div className="relative w-20 h-20">
-                                <Image src={b.icon} alt={b.title} fill className="object-contain" />
+                                <Image src={b.icon} alt={b.title} fill sizes="80px" className="object-contain" />
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-gray-800 whitespace-pre-line leading-snug">{b.title}</p>
@@ -83,7 +83,7 @@ export function BenefitHighlights() {
                     {bottomBenefits.map((b) => (
                         <div key={b.title} className="bg-gray-50 rounded-3xl p-6 flex flex-col items-center text-center gap-4 hover:shadow-md transition-shadow border border-gray-100">
                             <div className="relative w-20 h-20">
-                                <Image src={b.icon} alt={b.title} fill className="object-contain" />
+                                <Image src={b.icon} alt={b.title} fill sizes="80px" className="object-contain" />
                             </div>
                             <p className="text-sm font-bold text-gray-800 whitespace-pre-line leading-snug">{b.title}</p>
                         </div>

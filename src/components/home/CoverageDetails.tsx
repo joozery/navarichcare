@@ -49,6 +49,7 @@ export function CoverageDetails() {
                                     src={item.icon}
                                     alt={item.label}
                                     fill
+                                    sizes="96px"
                                     className="object-contain"
                                 />
                             </div>

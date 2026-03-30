@@ -21,7 +21,12 @@ export function PricingPackages() {
             try {
                 const res = await fetch("/api/packages");
                 const data = await res.json();
-                setPackages(data);
+                if (Array.isArray(data)) {
+                    setPackages(data);
+                } else {
+                    console.error("Packages API didn't return an array:", data);
+                    setPackages([]);
+                }
             } catch (error) {
                 console.error("Failed to fetch packages:", error);
             } finally {

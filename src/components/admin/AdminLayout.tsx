@@ -20,10 +20,30 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <div className="min-h-screen bg-[#F1F5F9] flex">
-            <AdminSidebar collapsed={collapsed} onToggle={() => setCollapsed(prev => !prev)} />
-            <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out" style={{ marginLeft: collapsed ? SIDEBAR_CLOSED : SIDEBAR_OPEN }}>
-                <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-40">
+        <div className="min-h-screen bg-[#F1F5F9] flex relative">
+            {/* Global Print Resets */}
+            <style jsx global>{`
+                @media print {
+                    .no-print { display: none !important; }
+                    .print-reset-margin { 
+                        margin-left: 0 !important; 
+                        padding: 0 !important; 
+                        width: 100% !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                    }
+                    main { padding: 0 !important; }
+                    body { background: white !important; }
+                }
+            `}</style>
+
+            <div className="no-print">
+                 <AdminSidebar collapsed={collapsed} onToggle={() => setCollapsed(prev => !prev)} />
+            </div>
+
+            <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out print-reset-margin" style={{ marginLeft: collapsed ? SIDEBAR_CLOSED : SIDEBAR_OPEN }}>
+                <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-40 no-print">
                     <div className="flex items-center gap-3 bg-gray-100 px-4 py-2 rounded-lg w-80">
                         <Search size={16} className="text-gray-400 shrink-0" />
                         <input type="text" placeholder="ค้นหา IMEI, เลขสัญญา, ตัวแทน..." className="bg-transparent border-none outline-none text-sm w-full placeholder:text-gray-400" />
@@ -49,4 +69,3 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </div>
     );
 }
-

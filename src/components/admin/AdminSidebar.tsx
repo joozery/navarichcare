@@ -29,6 +29,15 @@ const navGroups: NavGroup[] = [
         ],
     },
     {
+        group: "ระบบงานซ่อม & เคลม",
+        items: [
+            { title: "แดชบอร์ดซ่อม", icon: <LayoutDashboard size={18} />, href: "/admin/repair" },
+            { title: "รับเครื่องซ่อม/เคลม", icon: <Zap size={18} />, href: "/admin/repair/jobs/new" },
+            { title: "รายการงานซ่อม", icon: <ClipboardList size={18} />, href: "/admin/repair/jobs" },
+            { title: "จัดการพนักงานซ่อม", icon: <UserCog size={18} />, href: "/admin/repair/users" },
+        ],
+    },
+    {
         group: "บุคลากร",
         items: [
             { title: "จัดการแอดมิน", icon: <UserCog size={18} />, href: "/admin/users" },

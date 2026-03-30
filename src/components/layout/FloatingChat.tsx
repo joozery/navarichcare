@@ -77,7 +77,7 @@ export function FloatingChat() {
                                     alt="Logo"
                                     width={40}
                                     height={40}
-                                    className="object-contain w-full h-full"
+                                    className="object-contain"
                                 />
                             </div>
                             <div>

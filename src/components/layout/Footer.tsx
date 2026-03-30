@@ -72,7 +72,7 @@ export function Footer() {
                                 alt="NaravichCare"
                                 width={180}
                                 height={60}
-                                className="brightness-0 invert object-contain h-auto"
+                                className="brightness-0 invert object-contain"
                             />
                         </div>
                         <p className="text-base text-gray-500 leading-relaxed mb-8 max-w-sm whitespace-pre-line">

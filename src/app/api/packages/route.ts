@@ -4,10 +4,12 @@ import Package from "@/models/Package";
 
 export async function GET() {
     try {
-        await connectToDatabase();
+         await connectToDatabase();
         const packages = await Package.find({}).sort({ order: 1 });
+        console.log("Fetched packages:", packages.length);
         return NextResponse.json(packages);
     } catch (error: any) {
+        console.error("Failed to fetch packages:", error);
         return NextResponse.json({ message: "Failed to fetch packages", error: error.message }, { status: 500 });
     }
 }
