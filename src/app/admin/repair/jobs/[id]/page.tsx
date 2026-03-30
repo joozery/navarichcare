@@ -264,7 +264,7 @@ export default function RepairJobDetail({ params }: { params: Promise<{ id: stri
 
     return (
         <div className="max-w-6xl mx-auto space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-5 duration-700">
-            {/* Global Print Resets (Shared Area remains same) */}
+            {/* Global Print Resets */}
             <style jsx global>{`
                 @media print {
                     body * { visibility: hidden !important; }
@@ -294,8 +294,8 @@ export default function RepairJobDetail({ params }: { params: Promise<{ id: stri
 
             {/* SHARED PRINTABLE AREA */}
             <div id="printable-area" className="text-black bg-white">
-                {/* (Print template remains same) */}
-                <div className="flex justify-between items-start border-b-4 border-slate-900 pb-6 mb-8">
+                {/* Header Section */}
+                <div className="flex justify-between items-start border-b-4 border-slate-900 pb-6 mb-8 text-black">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2">
                              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white">
@@ -304,15 +304,103 @@ export default function RepairJobDetail({ params }: { params: Promise<{ id: stri
                              <h1 className="text-3xl font-black tracking-tighter italic">NAVAVICH CARE</h1>
                         </div>
                         <p className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-500">Service Center & Claims Management</p>
+                        <div className="flex flex-col gap-1 mt-4 text-[11px] font-bold text-slate-700">
+                             <div className="flex items-center gap-2"><MapPin size={12}/> กรุงเทพมหานคร (Bangkok, Thailand)</div>
+                             <div className="flex items-center gap-2"><Phone size={12}/> 0XX-XXX-XXXX | LINE: @navavich_care</div>
+                        </div>
                     </div>
                     <div className="text-right flex flex-col items-end">
                         <div className="bg-slate-900 text-white px-8 py-3 rounded-xl font-black text-3xl mb-3 italic">
                              {printMode === "receipt" ? "RECEIPT" : (job.totalPrice > 0 ? "QUOTATION" : "JOB SHEET")}
                         </div>
-                        <p className="text-[14px] font-black uppercase">NO: <span className="text-blue-600">{job.jobId}</span></p>
+                        <div className="space-y-1">
+                             <p className="text-[14px] font-black uppercase text-black">NO: <span className="text-blue-600">{job.jobId}</span></p>
+                             <p className="text-[10px] font-bold text-slate-400 uppercase italic whitespace-nowrap">Date: {new Date().toLocaleString('th-TH')}</p>
+                        </div>
                     </div>
                 </div>
-                {/* ... (Existing print sections) ... */}
+
+                {/* Customer & Device */}
+                <div className="grid grid-cols-2 gap-6 mb-8 text-black">
+                    <div className="border-2 border-slate-100 rounded-2xl p-6 bg-slate-50/20">
+                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2 italic text-blue-600">CUSTOMER INFO</h3>
+                         <p className="text-lg font-black text-slate-900 uppercase tracking-tight">{job.customer?.firstName} {job.customer?.lastName}</p>
+                         <p className="text-[11px] font-bold text-slate-600 mt-1">TEL: {job.customer?.phone}</p>
+                    </div>
+                    <div className="border-2 border-slate-100 rounded-2xl p-6 bg-slate-50/20">
+                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2 italic text-blue-600">DEVICE DETAILS</h3>
+                         <p className="text-lg font-black text-slate-900 uppercase tracking-tight">{job.brand} {job.deviceModel}</p>
+                         <p className="text-[11px] font-bold text-slate-700 italic mt-1">S/N: {job.imei || "Not Found"}</p>
+                    </div>
+                </div>
+
+                {/* Content Table */}
+                <div className="border-2 border-slate-900 rounded-2xl overflow-hidden mb-8 text-black bg-white">
+                    <table className="w-full text-left text-[12px]">
+                         <thead className="bg-slate-900 text-white uppercase font-black italic">
+                             <tr>
+                                 <th className="px-6 py-4">Description / รายการแจ้ง</th>
+                                 <th className="px-6 py-4 text-right">Amount / จำนวนเงิน</th>
+                             </tr>
+                         </thead>
+                         <tbody className="font-bold text-slate-800 italic">
+                             <tr className="border-b border-slate-100">
+                                 <td className="px-6 py-6">
+                                     <p className="text-slate-900 uppercase tracking-tight">Reported Problem: {job.reportedSymptom}</p>
+                                     {printMode === "receipt" && (
+                                         <p className="text-[10px] text-emerald-600 mt-2">Status: Repair Completed Successfully</p>
+                                     )}
+                                 </td>
+                                 <td className="px-6 py-6 text-right">
+                                     {job.totalPrice > 0 ? "฿ " + job.totalPrice.toLocaleString() : "-"}
+                                 </td>
+                             </tr>
+                             {job.totalPrice > 0 && (
+                                 <>
+                                     <tr className="border-b border-slate-100 text-[10px] text-slate-400">
+                                         <td className="px-6 py-3 shrink-0">Spare Parts & Service Labor (รวมอะไหล่และค่าแรง)</td>
+                                         <td className="px-6 py-3 text-right">฿ {job.totalPrice.toLocaleString()}</td>
+                                     </tr>
+                                     <tr className="bg-slate-50 text-slate-900 text-2xl font-black">
+                                         <td className="px-6 py-8">TOTAL AMOUNT (ราคาสุทธิ)</td>
+                                         <td className="px-6 py-8 text-right underline decoration-double decoration-slate-900 text-black">฿ {job.totalPrice.toLocaleString()}</td>
+                                     </tr>
+                                 </>
+                             )}
+                         </tbody>
+                    </table>
+                </div>
+
+                {/* Warranty Section for Receipt */}
+                {printMode === "receipt" && job.warrantyExpireDate && (
+                    <div className="mb-10 p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-blue-50/30 text-black">
+                         <div className="flex items-center gap-3 mb-3">
+                              <ShieldCheck size={20} className="text-blue-600" />
+                              <h4 className="text-sm font-black text-slate-900 uppercase italic">Warranty Information / รายละเอียดการรับประกัน</h4>
+                         </div>
+                         <div className="grid grid-cols-2 gap-4 text-[11px] font-bold italic">
+                              <p className="text-slate-600">WARRANTY EXPIRES: <span className="text-red-600 underline">{new Date(job.warrantyExpireDate).toLocaleDateString('th-TH')}</span></p>
+                              <p className="text-slate-600 text-right">VOID CODE: <span className="text-blue-600">{job.voidStickerCode || "-"}</span></p>
+                         </div>
+                         <p className="text-[9px] text-slate-400 mt-4 leading-relaxed font-medium">
+                              * การรับประกันครอบคลุมเฉพาะอาการเดิมที่แจ้งซ่อมเท่านั้น หาก Void Sticker ฉีกขาดหรือตัวเครื่องโดนความชื้น ประกันจะสิ้นสุดทันที
+                         </p>
+                    </div>
+                )}
+
+                {/* Signature Section */}
+                <div className="grid grid-cols-2 gap-32 pt-16 border-t-2 border-slate-900 mt-auto text-black bg-white">
+                    <div className="text-center space-y-6">
+                         <div className="h-12 border-b-2 border-slate-300 w-full"></div>
+                         <p className="text-[11px] font-black uppercase italic tracking-widest text-slate-400">Customer Signature / ลูกค้า</p>
+                    </div>
+                    <div className="text-center space-y-6">
+                         <div className="h-12 border-b-2 border-slate-300 w-full relative flex items-center justify-center">
+                              <span className="text-blue-600/10 font-black text-3xl uppercase tracking-[0.5em] absolute rotate-[-15deg]">NAVAVICH</span>
+                         </div>
+                         <p className="text-[11px] font-black uppercase italic tracking-widest text-slate-400">Authorized Signature / เจ้าหน้าที่</p>
+                    </div>
+                </div>
             </div>
 
             {/* NORMAL UI VIEW */}
@@ -342,7 +430,6 @@ export default function RepairJobDetail({ params }: { params: Promise<{ id: stri
 
             <div className="grid lg:grid-cols-12 gap-6 no-print">
                 <div className="lg:col-span-8 space-y-6">
-                    {/* (Info cards remain same) */}
                     <div className="grid md:grid-cols-2 gap-4">
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 transition-all hover:border-slate-300">
                              <div className="flex items-center gap-2 mb-4">
@@ -358,6 +445,7 @@ export default function RepairJobDetail({ params }: { params: Promise<{ id: stri
                                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer</span>
                              </div>
                              <p className="text-base font-black text-slate-900 uppercase italic tracking-tight">{job.customer?.firstName} {job.customer?.lastName}</p>
+                             <p className="text-[10px] font-bold text-blue-600 mt-1 uppercase italic tracking-tighter opacity-80">TEL: {job.customer?.phone}</p>
                         </div>
                     </div>
 
@@ -368,7 +456,7 @@ export default function RepairJobDetail({ params }: { params: Promise<{ id: stri
                          <p className="text-lg font-bold text-slate-800 leading-relaxed indent-4 underline decoration-slate-100">"{job.reportedSymptom}"</p>
                     </div>
 
-                    {/* PHOTO GALLERY (REALLY WORKING NOW) */}
+                    {/* PHOTO GALLERY */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="bg-slate-900 px-6 py-3 flex items-center justify-between">
                              <div className="flex items-center gap-2 text-white">
@@ -427,22 +515,36 @@ export default function RepairJobDetail({ params }: { params: Promise<{ id: stri
                     </div>
                 </div>
 
-                {/* Sidebar ACTIONS (Remains same) */}
+                {/* Sidebar ACTIONS */}
                 <div className="lg:col-span-4 space-y-6">
-                    {/* Status Manage */}
                     <div className="bg-slate-900 rounded-2xl p-6 shadow-xl">
                         <h3 className="text-[10px] font-black text-white uppercase tracking-[0.2em] italic mb-4">Management Controls</h3>
                         <div className="grid grid-cols-1 gap-1">
-                            {["checking", "quoted", "in_progress", "ready_pickup", "completed", "cancelled"].map((st) => (
-                                <button key={st} onClick={() => openStatusModal(st)} className="flex items-center justify-between w-full px-4 py-3 bg-white/5 hover:bg-blue-600 text-slate-300 rounded-xl transition-all group">
-                                    <span className="text-[10px] font-black uppercase tracking-tight">{getStatusLabel(st)}</span>
-                                    <ChevronRight size={14} />
-                                </button>
-                            ))}
+                            {["checking", "quoted", "in_progress", "ready_pickup", "completed", "cancelled"].map((st) => {
+                                const isActive = job.status === st;
+                                return (
+                                    <button 
+                                        key={st} 
+                                        onClick={() => openStatusModal(st)} 
+                                        className={`flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all group ${
+                                            isActive 
+                                            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
+                                            : "bg-white/5 hover:bg-blue-600/20 text-slate-300"
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {isActive && <CheckCircle size={14} className="text-white animate-pulse" />}
+                                            <span className="text-[10px] font-black uppercase tracking-tight">
+                                                {getStatusLabel(st)} {isActive && "(CURRENT)"}
+                                            </span>
+                                        </div>
+                                        <ChevronRight size={14} className={isActive ? "text-white/50" : "text-slate-500 group-hover:text-blue-400"} />
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    {/* PRICING & PROFIT */}
                     <div className="bg-white rounded-2xl border-2 border-slate-100 shadow-sm p-6 overflow-hidden">
                          <div className="flex items-center justify-between mb-6 border-b border-slate-50 pb-3">
                               <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic">Quote & Profitability</h4>
@@ -478,7 +580,6 @@ export default function RepairJobDetail({ params }: { params: Promise<{ id: stri
                          </button>
                     </div>
 
-                    {/* WARRANTY CONTROL */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                          <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic border-b border-slate-50 pb-3 mb-6">Warranty Control</h4>
                          <div className="space-y-4">
